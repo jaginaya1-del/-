@@ -23,8 +23,7 @@
     input: document.getElementById('q'),
     clear: document.getElementById('clear'),
     about: document.getElementById('about'),
-    legal: document.getElementById('legal'),
-    year: document.getElementById('year')
+    legal: document.getElementById('legal')
   };
 
   /* ---------- utils ---------- */
@@ -39,30 +38,37 @@
   }
 
   function won(n) {
-    return Number(n).toLocaleString('ko-KR') + '원';
+    var s = String(Math.round(Number(n)));
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
   }
 
   /* ---------- data ---------- */
 
   // 우선순위: data.json (웹에 올렸을 때·자동 갱신용) → data.js (파일을 직접 열었을 때)
   function loadData() {
+    var canFetch = typeof fetch === 'function';
+    if (!canFetch) return Promise.resolve(pickFallback());
     return fetch('data.json', { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
       .catch(function () {
-        if (window.HOTDEAL_DATA) return window.HOTDEAL_DATA;
-        return new Promise(function (resolve, reject) {
-          var s = document.createElement('script');
-          s.src = 'data.js';
-          s.onload = function () {
-            window.HOTDEAL_DATA ? resolve(window.HOTDEAL_DATA) : reject(new Error('no data'));
-          };
-          s.onerror = function () { reject(new Error('no data')); };
-          document.head.appendChild(s);
-        });
+        return pickFallback();
       });
+  }
+
+  function pickFallback() {
+    if (window.HOTDEAL_DATA) return window.HOTDEAL_DATA;
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'data.js';
+      s.onload = function () {
+        window.HOTDEAL_DATA ? resolve(window.HOTDEAL_DATA) : reject(new Error('no data'));
+      };
+      s.onerror = function () { reject(new Error('no data')); };
+      document.head.appendChild(s);
+    });
   }
 
   /* ---------- render ---------- */
@@ -84,14 +90,12 @@
         '쿠팡 링크는 쿠팡 파트너스 링크예요.</p>' +
         '<p style="color:#9C9187">' + esc(site.brandSub) + ' · ' + esc(site.shopNote) + '</p>';
     }
-    if (el.legal) {
-      el.legal.innerHTML =
+    if (el.legal) {      el.legal.innerHTML =
         '<p class="legal"><strong>쿠팡 파트너스 고지</strong> — ' + esc(site.partnersNotice) + '</p>' +
         '<p class="legal">표시된 가격은 ' + esc(site.roundFull) + ' 기준이며, 쿠팡 와우회원가·토스회원 할인가가 포함될 수 있습니다. ' +
         '실시간 가격과 재고는 판매처 페이지에서 확인해 주세요.</p>' +
         '<p class="sign">© <b>' + esc(site.brandSub) + '</b> ' + esc(site.owner) + ' · ' + esc(site.shopNote) + '</p>';
     }
-    if (el.year) el.year.textContent = new Date().getFullYear();
   }
 
   function countOf(mall) {
@@ -126,10 +130,14 @@
         '" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-ph="' + esc(item.icon || '🛍️') + '">'
       : '<span class="ph"><span>' + esc(item.icon || '🛍️') + '</span></span>';
 
+    var deadline = item.deadline
+      ? '<span class="deadline' + (item.deadlinePassed ? ' passed' : '') + '">⏰ ' + esc(item.deadline) + '</span>'
+      : '';
+
     var thumb = item.link
       ? '<a class="thumb" href="' + esc(item.link) + '" target="_blank" rel="noopener sponsored" ' +
-        'aria-label="' + esc(item.title) + ' 쿠팡에서 보기">' + thumbInner + '</a>'
-      : '<div class="thumb">' + thumbInner + '</div>';
+        'aria-label="' + esc(item.title) + ' 쿠팡에서 보기">' + thumbInner + deadline + '</a>'
+      : '<div class="thumb">' + thumbInner + deadline + '</div>';
 
     var priceRow = '';
     if (item.discount) priceRow += '<span class="disc">' + item.discount + '%</span>';

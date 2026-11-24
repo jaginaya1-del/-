@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF6EE">
+<title>흥장군의 오늘의 핫딜! | 라망도르 성은 님의 생활 특가</title>
+<meta name="description" content="라망도르 성은 님이 직접 고른 쿠팡·토스 생활 특가 아카이브. 매일 오전 6시·오후 2시, 타 쇼핑몰 실제 판매가와 비교해 메리트 있는 상품만 골라 담습니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="흥장군의 오늘의 핫딜!">
+<meta property="og:description" content="라망도르 성은 님이 직접 고른 생활 특가 아카이브 — 쿠팡 5선 + 토스 5선">
+<meta name="robots" content="index, follow">
+<style>
+/* =========================================================
+   흥장군의 오늘의 핫딜!  —  라망도르 성은 님의 생활 특가 아카이브
+   화이트 · 크림 톤 모바일 스토어프론트
+   ========================================================= */
+
+:root {
+  --cream: #FBF6EE;
+  --cream-deep: #F4EBDD;
+  --paper: #FFFFFF;
+  --ink: #2C2724;
+  --ink-soft: #6E655C;
+  --ink-faint: #9C9187;
+  --line: #EDE4D8;
+  --gold: #B8873B;
+  --gold-soft: #F3E4C9;
+  --coupang: #E8452C;
+  --toss: #3182F6;
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(70, 55, 40, .05), 0 8px 24px -18px rgba(70, 55, 40, .45);
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard",
+          "Noto Sans KR", "Malgun Gothic", "맑은 고딕", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ---------------- Hero ---------------- */
+
+.hero {
+  background:
+    radial-gradient(120% 90% at 88% -10%, #FFF8EC 0%, rgba(255, 248, 236, 0) 60%),
+    linear-gradient(180deg, #FFFDF8 0%, var(--cream) 100%);
+  border-bottom: 1px solid var(--line);
+  padding: 22px 0 0;
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 16px;
+}
+
+.avatar {
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #6B4A17;
+  background: linear-gradient(145deg, #FBE7BE 0%, #E7C58A 55%, #D9AE6A 100%);
+  border: 2px solid #FFFDF8;
+  box-shadow: 0 4px 14px -6px rgba(150, 110, 45, .55);
+}
+
+.who { min-width: 0; }
+
+.shop {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.25;
+  letter-spacing: -.02em;
+  font-weight: 800;
+}
+
+.tagline {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+/* 회차 표시 */
+.round {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.round .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3FAE6A;
+  box-shadow: 0 0 0 3px rgba(63, 174, 106, .15);
+  flex: 0 0 auto;
+}
+
+.round strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.round span {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.round .notice {
+  flex-basis: 100%;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+/* 검색 */
+.search {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.search svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  stroke: var(--ink-faint);
+  fill: none;
+  stroke-width: 2;
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 40px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search input::placeholder { color: #B2A79B; }
+
+.search input:focus {
+  border-color: #DCC9A8;
+  box-shadow: 0 0 0 3px rgba(184, 135, 59, .12);
+}
+
+.search .clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--cream-deep);
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: none;
+}
+
+.search.has-value .clear { display: block; }
+
+/* 탭 */
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabs::-webkit-scrollbar { display: none; }
+
+.tabs button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+
+.tabs button .count {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
+.tabs button[aria-selected="true"] {
+  color: #4A3510;
+  background: var(--gold-soft);
+  border-color: #E3CB9F;
+}
+
+.tabs button[aria-selected="true"] .count { color: #8A6A2E; }
+
+/* ---------------- 목록 ---------------- */
+
+main { padding: 18px 0 8px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 359px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.card:active { transform: translateY(1px); }
+
+.thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  background: var(--cream-deep);
+  overflow: hidden;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 이미지가 없거나 깨졌을 때의 대체 타일 */
+.thumb .ph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  background:
+    radial-gradient(120% 120% at 20% 10%, #FFFDF7 0%, rgba(255, 253, 247, 0) 60%),
+    linear-gradient(150deg, #F7EAD4 0%, #EFDDC2 100%);
+}
+
+.card[data-mall="toss"] .thumb .ph {
+  background:
+    radial-gradient(120% 120% at 20% 10%, #FFFFFF 0%, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(150deg, #E9F1FE 0%, #D7E6FD 100%);
+}
+
+.thumb .ph span { filter: drop-shadow(0 4px 6px rgba(120, 90, 40, .18)); }
+
+/* 썸네일 위 배지 */
+.mall {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  border-radius: 999px;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
+}
+
+.mall.coupang { background: var(--coupang); }
+.mall.toss { background: var(--toss); }
+
+.deadline {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  color: #8A4B12;
+  background: #FFE9C9;
+  border: 1px solid #F6D8A8;
+}
+
+.deadline.passed {
+  color: #7B736B;
+  background: #F0EDE8;
+  border-color: #E2DCD4;
+  text-decoration: line-through;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 11px 12px 13px;
+  flex: 1 1 auto;
+}
+
+.round-badge {
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.round-badge .rank {
+  display: inline-grid;
+  place-items: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  color: #6B4A17;
+  background: var(--gold-soft);
+  border-radius: 5px;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.reason {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.disc {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--coupang);
+}
+
+.price {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--ink);
+}
+
+.list-price {
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}
+
+.unit {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.compare {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #857A6E;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+}
+
+.compare b {
+  color: #6B5B48;
+  font-weight: 700;
+}
+
+.option-note {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #A2601C;
+  background: #FFF6E7;
+  border: 1px solid #F8E3C1;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.meta {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--ink-faint);
+  line-height: 1.45;
+}
+
+.cta {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 38px;
+  margin-top: 10px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #fff;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #F0654E 0%, #E8452C 100%);
+  box-shadow: 0 6px 14px -10px rgba(232, 69, 44, .9);
+}
+
+.cta.toss {
+  color: #1B4FA8;
+  background: linear-gradient(180deg, #EAF2FF 0%, #DCE9FF 100%);
+  border: 1px solid #C9DDFF;
+  box-shadow: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.cta:active { filter: brightness(.97); }
+.cta.copied { background: #E7F6EC; border-color: #BFE4CB; color: #1F7A45; }
+
+/* 빈 결과 */
+.empty {
+  margin: 40px 0;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  line-height: 1.7;
+}
+
+/* ---------------- 안내 / 소개 ---------------- */
+
+.about {
+  margin: 26px 0 0;
+  padding: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.about h3 {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.about p {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.about p:last-child { margin-bottom: 0; }
+
+.about .accent { color: var(--gold); font-weight: 700; }
+
+/* ---------------- 푸터 ---------------- */
+
+footer {
+  margin-top: 22px;
+  padding: 22px 0 calc(30px + env(safe-area-inset-bottom));
+  background: #F5EEE3;
+  border-top: 1px solid var(--line);
+}
+
+.legal {
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #8A7F73;
+}
+
+.legal strong { color: #6E6255; }
+
+.sign {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #A0958A;
+}
+
+.sign b { color: #7A6D60; font-weight: 700; }
+
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-top">
+      <div class="avatar" aria-hidden="true">흥</div>
+      <div class="who">
+        <p class="shop">라망도르 · La main d'or</p>
+        <h1>흥장군의 오늘의 핫딜!</h1>
+        <p class="tagline">라망도르 성은 님이 직접 고른 생활 특가 아카이브</p>
+      </div>
+    </div>
+
+    <div class="round" id="roundBar">
+      <span class="dot" aria-hidden="true"></span>
+      <strong>오늘의 특가 불러오는 중…</strong>
+    </div>
+
+    <div class="search" id="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+      <input id="q" type="search" inputmode="search" autocomplete="off"
+             placeholder="상품명으로 찾기 (예: 토마토, 로션)" aria-label="상품 검색">
+      <button type="button" class="clear" id="clear" aria-label="검색어 지우기">✕</button>
+    </div>
+
+    <nav class="tabs" id="tabs" role="tablist" aria-label="특가 종류"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>검색 결과가 없어요.<br>다른 단어로 찾아보시겠어요?</p>
+
+  <section class="about" id="about" aria-label="소개"></section>
+</main>
+
+<footer>
+  <div class="wrap" id="legal"></div>
+</footer>
+
+<script>window.HOTDEAL_DATA = {
+  "site": {
+    "brand": "라망도르",
+    "brandSub": "La main d'or",
+    "title": "흥장군의 오늘의 핫딜!",
+    "tagline": "라망도르 성은 님이 직접 고른 생활 특가 아카이브",
+    "owner": "길성은",
+    "shopNote": "경기 광주시 신현동 · 1인 수제 디저트 공방",
+    "roundLabel": "11/25 오전 6시",
+    "roundFull": "2026-11-25 06:00 회차",
+    "updatedAt": "2026-11-25T06:00:00+09:00",
+    "notice": "가격·재고는 실시간으로 바뀝니다. 마감 표시된 특가는 이미 종료되었을 수 있어요.",
+    "partnersNotice": "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
+  },
+  "items": [
+    {
+      "id": "cp-tomato",
+      "mall": "coupang",
+      "rank": 1,
+      "title": "[타임특가] 단단한 완숙토마토 2.5kg (소과)",
+      "short": "완숙토마토 2.5kg",
+      "reason": "김장·찌개용 완숙토마토 2.5kg를 kg당 3천원 아래로",
+      "price": 7380,
+      "listPrice": 17000,
+      "discount": 57,
+      "priceNote": "와우 7,380원 / 일반 17,000원",
+      "unit": "kg당 2,952원",
+      "compare": "G마켓 2kg 소과 7,130원(kg 3,565원) · 신세계 2.5kg 17,350원보다 kg당 17~57% 저렴",
+      "meta": "무료배송 · 11/27(금) 도착 · 리뷰 2,033",
+      "deadline": "07:00 마감",
+      "deadlinePassed": true,
+      "optionNote": "",
+      "link": "https://link.coupang.com/a/iWY1XCf9MG",
+      "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/640x640ex/image/vendor_inventory/5fc8/0a6e81ab9c347c37a3167628cd9bd85f5dd0306938ce6e268dd2a457171c.jpg",
+      "icon": "🍅",
+      "tags": [
+        "식품",
+        "채소",
+        "토마토"
+      ]
+    },
+    {
+      "id": "cp-lotion",
+      "mall": "coupang",
+      "rank": 2,
+      "title": "밀크바오밥 바디로션 베이비파우더향 500ml",
+      "short": "밀크바오밥 바디로션 500ml",
+      "reason": "건조한 계절 온가족 바디로션, 브랜드 최저가 수준",
+      "price": 7630,
+      "listPrice": 12900,
+      "discount": 40,
+      "priceNote": "와우 7,630원 / 정가 12,900원",
+      "unit": "100ml당 1,526원",
+      "compare": "공식몰 9,810원(배송비 3,000원 별도) · 올리브영 13,900원대보다 22~45% 저렴",
+      "meta": "무료배송 · 11/26(목) 도착 · 리뷰 32,154 · 사용기한 2028-03-22 이후",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "",
+      "link": "https://link.coupang.com/a/iWY4Z6BRXo",
+      "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/640x640ex/image/retail/images/346071975695843-a2457961-ef76-48ba-b6c4-2a6cd236164b.jpg",
+      "icon": "🧴",
+      "tags": [
+        "뷰티",
+        "바디로션",
+        "생활"
+      ]
+    },
+    {
+      "id": "cp-sponge",
+      "mall": "coupang",
+      "rank": 3,
+      "title": "스카치브라이트 삼중양면 스펀지 수세미 혼합팩 8개입×2 (16개)",
+      "short": "스카치브라이트 수세미 16개",
+      "reason": "16개 9,980원, 개당 624원으로 수세미 소진 빠른 집에 딱",
+      "price": 9980,
+      "listPrice": 16580,
+      "discount": 40,
+      "priceNote": "와우 9,980원 / 일반 16,580원",
+      "unit": "개당 624원",
+      "compare": "같은 브랜드 8개입 1개 7,900~8,290원(개당 988~1,036원)보다 개당 37~40% 저렴",
+      "meta": "무료배송 · 오늘 도착 · 리뷰 7,032",
+      "deadline": "07:00 마감",
+      "deadlinePassed": true,
+      "optionNote": "링크 기본 옵션은 8개입 1개(8,290원) → 8개입×2개 옵션으로 바꿔야 이 가격",
+      "link": "https://link.coupang.com/a/iWY32HeJA4",
+      "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/640x640ex/image/retail/images/189748353729897-61e3ab5e-8860-44c6-8bd8-9a50b01df594.jpg",
+      "icon": "🧽",
+      "tags": [
+        "주방",
+        "수세미",
+        "생활"
+      ]
+    },
+    {
+      "id": "cp-kimchi",
+      "mall": "coupang",
+      "rank": 4,
+      "title": "발룬피니 내열강화유리 김치통 밀폐용기 920ml×2",
+      "short": "내열유리 김치통 920ml 2개",
+      "reason": "김장철 김치·반찬 소분용 내열유리, 개당 5천원",
+      "price": 10000,
+      "listPrice": 0,
+      "discount": 0,
+      "priceNote": "10,000원 (2개 기준)",
+      "unit": "개당 5,000원",
+      "compare": "글라스락 퍼플에디션 920ml 2개 13,900원(개당 6,950원)보다 개당 28% 저렴",
+      "meta": "무료배송 · 오늘 도착 · 리뷰 1,553 (평점 5.0)",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "링크 기본 옵션은 920ml 1개(8,620원) → 920ml×2개 옵션을 골라야 개당 5,000원",
+      "link": "https://link.coupang.com/a/iWZk60KbLM",
+      "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/640x640ex/image/retail/images/2025/07/07/14/8/e4aa62d7-66ca-46f6-8473-0bbdf945b377.jpg",
+      "icon": "🫙",
+      "tags": [
+        "주방",
+        "밀폐용기",
+        "김장"
+      ]
+    },
+    {
+      "id": "cp-earmuff",
+      "mall": "coupang",
+      "rank": 5,
+      "title": "네파 세이프티 리플렉트 방한 귀마개 블랙 FREE",
+      "short": "네파 방한 귀마개",
+      "reason": "출퇴근·등굣길 방한 필수품, 브랜드 제품 4,550원",
+      "price": 4550,
+      "listPrice": 6500,
+      "discount": 30,
+      "priceNote": "와우 4,550원 / 정가 6,500원",
+      "unit": "",
+      "compare": "K2 Safety 듀얼 7,750원 · 네파 듀오 7,740원 · 휠라 8,410원보다 41~46% 저렴",
+      "meta": "무료배송 · 오늘 도착 · 리뷰 1,017",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "",
+      "link": "https://link.coupang.com/a/iWY5UO79l6",
+      "image": "https://thumbnail.coupangcdn.com/thumbnails/remote/640x640ex/image/retail/images/2026/10/20/13/8/63707057-1a1b-43ee-a994-4970c4d5c2b5.jpg",
+      "icon": "🎧",
+      "tags": [
+        "패션",
+        "방한용품",
+        "귀마개"
+      ]
+    },
+    {
+      "id": "ts-tteokgalbi",
+      "mall": "toss",
+      "rank": 1,
+      "title": "셰프초이스 육즙가득 도톰도톰 떡갈비 2kg",
+      "short": "셰프초이스 떡갈비 2kg",
+      "reason": "냉동실 상비 반찬 2kg, 100g당 800원 아래",
+      "price": 15900,
+      "listPrice": 0,
+      "discount": 38,
+      "priceNote": "15,900원",
+      "unit": "100g당 795원",
+      "compare": "쿠팡 비비고 한입 떡갈비 320g 5,980원(100g당 1,869원)보다 100g당 57% 저렴",
+      "meta": "★4.8 · 리뷰 3,604",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "",
+      "link": "",
+      "image": "",
+      "icon": "🍖",
+      "tags": [
+        "식품",
+        "간편식",
+        "떡갈비"
+      ]
+    },
+    {
+      "id": "ts-bodywash",
+      "mall": "toss",
+      "rank": 2,
+      "title": "센토 프라임 보타니컬 시카 약산성 바디워시 티트리 포레스트향 1.1L×2",
+      "short": "센토 바디워시 1.1L 2개",
+      "reason": "1.1L 두 병 12,980원, 개당 6,490원",
+      "price": 12980,
+      "listPrice": 0,
+      "discount": 67,
+      "priceNote": "12,980원 (2개)",
+      "unit": "개당 6,490원",
+      "compare": "오늘의집 1.1L 11,900원 · 쿠팡 10,960원보다 개당 41~46% 저렴",
+      "meta": "★4.7 · 리뷰 545",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "",
+      "link": "",
+      "image": "",
+      "icon": "🛁",
+      "tags": [
+        "뷰티",
+        "바디워시",
+        "생활"
+      ]
+    },
+    {
+      "id": "ts-energybar",
+      "mall": "toss",
+      "rank": 3,
+      "title": "슈퍼우먼 에너지바 35g×36",
+      "short": "슈퍼우먼 에너지바 36개",
+      "reason": "아이 간식·출근 도시락용 36개, 개당 453원",
+      "price": 16300,
+      "listPrice": 0,
+      "discount": 69,
+      "priceNote": "16,300원 (36개)",
+      "unit": "개당 453원",
+      "compare": "쿠팡 36개 21,340원(개당 593원) · 신세계 12개 14,170원보다 개당 24~62% 저렴",
+      "meta": "★4.7 · 리뷰 2,766",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "",
+      "link": "",
+      "image": "",
+      "icon": "🍫",
+      "tags": [
+        "식품",
+        "간식",
+        "에너지바"
+      ]
+    },
+    {
+      "id": "ts-honey",
+      "mall": "toss",
+      "rank": 4,
+      "title": "플로비즈 시그니처 야생화꿀 2kg",
+      "short": "플로비즈 야생화꿀 2kg",
+      "reason": "겨울 차·요리용 대용량 꿀 2kg, kg당 6,600원",
+      "price": 13200,
+      "listPrice": 0,
+      "discount": 70,
+      "priceNote": "13,200원",
+      "unit": "kg당 6,600원",
+      "compare": "G마켓 14,710원(쿠폰가) · 코니허브 14,900원보다 10~11% 저렴 (베트남산 잡화꿀)",
+      "meta": "★4.7 · 리뷰 1,627",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "",
+      "link": "",
+      "image": "",
+      "icon": "🍯",
+      "tags": [
+        "식품",
+        "꿀",
+        "차"
+      ]
+    },
+    {
+      "id": "ts-mop",
+      "mall": "toss",
+      "rank": 5,
+      "title": "스프렉스 핸디형 물기제거 밀대 13×15cm 2개",
+      "short": "스프렉스 핸디 밀대 2개",
+      "reason": "욕실·싱크대 물기 제거 2개 3,250원",
+      "price": 3250,
+      "listPrice": 0,
+      "discount": 58,
+      "priceNote": "3,250원 (2개)",
+      "unit": "개당 1,625원",
+      "compare": "10/21 토스 3,310원보다 60원 저렴 · 타몰 동일 상품 비교자료 없음",
+      "meta": "★4.3 · 리뷰 4,525",
+      "deadline": "",
+      "deadlinePassed": false,
+      "optionNote": "",
+      "link": "",
+      "image": "",
+      "icon": "🧼",
+      "tags": [
+        "생활",
+        "청소",
+        "밀대"
+      ]
+    }
+  ]
+};</script>
+<script>
+/* =========================================================
+   흥장군의 오늘의 핫딜! — app.js
+   데이터는 data.json 하나만 고치면 페이지가 그대로 갱신됩니다.
+   (data.js 는 data.json 을 그대로 감싼 사본: 오프라인/파일 직접 열기용)
+   ========================================================= */
+(function () {
+  'use strict';
+
+  var MALLS = {
+    coupang: { name: '쿠팡', className: 'coupang' },
+    toss: { name: '토스', className: 'toss' }
+  };
+
+  var state = { mall: 'all', q: '' };
+  var DATA = null;
+
+  var el = {
+    roundBar: document.getElementById('roundBar'),
+    grid: document.getElementById('grid'),
+    empty: document.getElementById('empty'),
+    tabs: document.getElementById('tabs'),
+    search: document.getElementById('search'),
+    input: document.getElementById('q'),
+    clear: document.getElementById('clear'),
+    about: document.getElementById('about'),
+    legal: document.getElementById('legal')
+  };
+
+  /* ---------- utils ---------- */
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function won(n) {
+    var s = String(Math.round(Number(n)));
+    return s.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원';
+  }
+
+  /* ---------- data ---------- */
+
+  // 우선순위: data.json (웹에 올렸을 때·자동 갱신용) → data.js (파일을 직접 열었을 때)
+  function loadData() {
+    var canFetch = typeof fetch === 'function';
+    if (!canFetch) return Promise.resolve(pickFallback());
+    return fetch('data.json', { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .catch(function () {
+        return pickFallback();
+      });
+  }
+
+  function pickFallback() {
+    if (window.HOTDEAL_DATA) return window.HOTDEAL_DATA;
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'data.js';
+      s.onload = function () {
+        window.HOTDEAL_DATA ? resolve(window.HOTDEAL_DATA) : reject(new Error('no data'));
+      };
+      s.onerror = function () { reject(new Error('no data')); };
+      document.head.appendChild(s);
+    });
+  }
+
+  /* ---------- render ---------- */
+
+  function renderHead(site) {
+    if (el.roundBar) {
+      el.roundBar.innerHTML =
+        '<span class="dot" aria-hidden="true"></span>' +
+        '<strong>' + esc(site.roundLabel) + ' 업데이트</strong>' +
+        '<span>' + esc(site.roundFull) + ' · 쿠팡 5선 + 토스 5선</span>' +
+        '<span class="notice">' + esc(site.notice) + '</span>';
+    }
+    if (el.about) {
+      el.about.innerHTML =
+        '<h3>' + esc(site.brand) + ' ' + esc(site.owner) + ' 님이 고른 이유</h3>' +
+        '<p>하루 두 번(오전 6시·오후 2시), 쿠팡과 토스에서 <b>실제 판매가를 다른 쇼핑몰과 직접 비교</b>해 ' +
+        '메리트가 확인된 생활용품만 골라 담습니다. 광고비를 받고 올린 상품이 아니라, 장보는 사람 눈으로 고른 목록이에요.</p>' +
+        '<p>토스 특가는 <span class="accent">토스 앱에서만</span> 결제되는 상품이라 링크 대신 상품명을 복사해 검색할 수 있게 해두었습니다. ' +
+        '쿠팡 링크는 쿠팡 파트너스 링크예요.</p>' +
+        '<p style="color:#9C9187">' + esc(site.brandSub) + ' · ' + esc(site.shopNote) + '</p>';
+    }
+    if (el.legal) {      el.legal.innerHTML =
+        '<p class="legal"><strong>쿠팡 파트너스 고지</strong> — ' + esc(site.partnersNotice) + '</p>' +
+        '<p class="legal">표시된 가격은 ' + esc(site.roundFull) + ' 기준이며, 쿠팡 와우회원가·토스회원 할인가가 포함될 수 있습니다. ' +
+        '실시간 가격과 재고는 판매처 페이지에서 확인해 주세요.</p>' +
+        '<p class="sign">© <b>' + esc(site.brandSub) + '</b> ' + esc(site.owner) + ' · ' + esc(site.shopNote) + '</p>';
+    }
+  }
+
+  function countOf(mall) {
+    if (mall === 'all') return DATA.items.length;
+    return DATA.items.filter(function (it) { return it.mall === mall; }).length;
+  }
+
+  function renderTabs() {
+    if (!el.tabs) return;
+    var labels = { all: '전체', coupang: '쿠팡 특가', toss: '토스 특가' };
+    el.tabs.innerHTML = Object.keys(labels).map(function (key) {
+      return '<button type="button" role="tab" data-filter="' + key + '" aria-selected="' +
+        (state.mall === key ? 'true' : 'false') + '">' +
+        esc(labels[key]) + '<span class="count">' + countOf(key) + '</span></button>';
+    }).join('');
+  }
+
+  function matches(item) {
+    if (state.mall !== 'all' && item.mall !== state.mall) return false;
+    if (!state.q) return true;
+    var q = state.q.toLowerCase();
+    var hay = [item.title, item.short, item.reason, item.unit, item.compare,
+      (item.tags || []).join(' '), MALLS[item.mall] && MALLS[item.mall].name]
+      .join(' ').toLowerCase();
+    return hay.indexOf(q) !== -1;
+  }
+
+  function cardHTML(item, site) {
+    var mall = MALLS[item.mall] || { name: '특가', className: 'coupang' };
+    var thumbInner = item.image
+      ? '<img src="' + esc(item.image) + '" alt="' + esc(item.short || item.title) +
+        '" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-ph="' + esc(item.icon || '🛍️') + '">'
+      : '<span class="ph"><span>' + esc(item.icon || '🛍️') + '</span></span>';
+
+    var deadline = item.deadline
+      ? '<span class="deadline' + (item.deadlinePassed ? ' passed' : '') + '">⏰ ' + esc(item.deadline) + '</span>'
+      : '';
+
+    var thumb = item.link
+      ? '<a class="thumb" href="' + esc(item.link) + '" target="_blank" rel="noopener sponsored" ' +
+        'aria-label="' + esc(item.title) + ' 쿠팡에서 보기">' + thumbInner + deadline + '</a>'
+      : '<div class="thumb">' + thumbInner + deadline + '</div>';
+
+    var priceRow = '';
+    if (item.discount) priceRow += '<span class="disc">' + item.discount + '%</span>';
+    priceRow += '<span class="price">' + won(item.price) + '</span>';
+    if (item.listPrice) priceRow += '<span class="list-price">' + won(item.listPrice) + '</span>';
+
+    var cta;
+    if (item.mall === 'coupang' && item.link) {
+      cta = '<a class="cta" href="' + esc(item.link) + '" target="_blank" rel="noopener sponsored">바로 보러가기 →</a>';
+    } else {
+      cta = '<button type="button" class="cta toss" data-copy="' + esc(item.title) + '">토스 앱에서 검색 · 이름 복사</button>';
+    }
+
+    return '' +
+      '<article class="card" data-mall="' + esc(item.mall) + '" data-id="' + esc(item.id) + '">' +
+        thumb +
+        '<div class="body">' +
+          '<p class="round-badge"><span class="rank">' + esc(item.rank) + '</span>' +
+            esc(site.roundLabel) + '</p>' +
+          '<h2>' + esc(item.title) + '</h2>' +
+          '<p class="reason">' + esc(item.reason) + '</p>' +
+          '<div class="price-row">' + priceRow + '</div>' +
+          (item.unit ? '<p class="unit">' + esc(item.unit) + '</p>' : '') +
+          (item.compare ? '<p class="compare"><b>타몰 비교</b> ' + esc(item.compare) + '</p>' : '') +
+          (item.optionNote ? '<p class="option-note">옵션 확인 · ' + esc(item.optionNote) + '</p>' : '') +
+          (item.meta ? '<p class="meta">' + esc(item.meta) + '</p>' : '') +
+          cta +
+        '</div>' +
+      '</article>';
+  }
+
+  function renderGrid() {
+    if (!el.grid) return;
+    var list = DATA.items.filter(matches).sort(function (a, b) {
+      if (a.mall !== b.mall) return a.mall === 'coupang' ? -1 : 1;
+      return a.rank - b.rank;
+    });
+
+    el.grid.innerHTML = list.map(function (it) { return cardHTML(it, DATA.site); }).join('');
+    if (el.empty) el.empty.hidden = list.length > 0;
+    wireImageFallback();
+  }
+
+  /* ---------- behaviour ---------- */
+
+  function wireImageFallback() {
+    Array.prototype.forEach.call(el.grid.querySelectorAll('.thumb img'), function (img) {
+      img.addEventListener('error', function () {
+        var span = document.createElement('span');
+        span.className = 'ph';
+        span.innerHTML = '<span>' + esc(img.getAttribute('data-ph') || '🛍️') + '</span>';
+        if (img.parentNode) img.parentNode.replaceChild(span, img);
+      });
+      // 이미 캐시된 실패(자연 크기 0)도 잡아준다
+      if (img.complete && img.naturalWidth === 0) {
+        img.dispatchEvent(new Event('error'));
+      }
+    });
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    return new Promise(function (resolve, reject) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy') ? resolve() : reject(new Error('copy failed'));
+      } catch (e) {
+        reject(e);
+      } finally {
+        document.body.removeChild(ta);
+      }
+    });
+  }
+
+  function bindEvents() {
+    if (el.tabs) {
+      el.tabs.addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-filter]');
+        if (!btn) return;
+        state.mall = btn.getAttribute('data-filter');
+        renderTabs();
+        renderGrid();
+      });
+    }
+
+    if (el.input) {
+      el.input.addEventListener('input', function () {
+        state.q = el.input.value.trim();
+        if (el.search) el.search.classList.toggle('has-value', !!state.q);
+        renderGrid();
+      });
+    }
+
+    if (el.clear) {
+      el.clear.addEventListener('click', function () {
+        if (!el.input) return;
+        el.input.value = '';
+        state.q = '';
+        if (el.search) el.search.classList.remove('has-value');
+        renderGrid();
+        el.input.focus();
+      });
+    }
+
+    if (el.grid) {
+      el.grid.addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-copy]');
+        if (!btn) return;
+        var label = btn.textContent;
+        copyText(btn.getAttribute('data-copy')).then(function () {
+          btn.textContent = '상품명 복사 완료 ✓';
+          btn.classList.add('copied');
+          setTimeout(function () {
+            btn.textContent = label;
+            btn.classList.remove('copied');
+          }, 1600);
+        }).catch(function () {
+          btn.textContent = '길게 눌러 복사해 주세요';
+          setTimeout(function () { btn.textContent = label; }, 2200);
+        });
+      });
+    }
+  }
+
+  /* ---------- boot ---------- */
+
+  function boot() {
+    loadData().then(function (data) {
+      DATA = data;
+      renderHead(DATA.site);
+      renderTabs();
+      renderGrid();
+      bindEvents();
+    }).catch(function () {
+      if (el.grid) {
+        el.grid.innerHTML = '';
+      }
+      if (el.empty) {
+        el.empty.hidden = false;
+        el.empty.textContent = '특가 목록을 불러오지 못했어요. 잠시 후 새로고침해 주세요.';
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+
+</script>
+</body>
+</html>
