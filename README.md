@@ -12,11 +12,12 @@ hotdeal-page/
 ├── app.js         data.json 을 읽어 카드를 그리는 스크립트 (검색·탭·이미지 대체·복사)
 ├── data.json      ★ 실제 특가 데이터 (여기만 고치면 됩니다)
 ├── data.js        data.json 을 그대로 감싼 사본 — 자동 생성 파일, 직접 수정 금지
+├── img/           토스쇼핑 상품 이미지 (쉐어링크의 og:image 를 640px JPEG 로 저장)
 ├── sync_data.py   data.json → data.js 동기화
-├── build_single.py  위 파일들을 index.html 하나로 묶기 (dist/index.html 생성)
+├── build_single.py  위 파일들을 index.html 하나로 묶기 (dist/index.html 생성, 로컬 이미지는 data URI 로 인라인)
 ├── test_render.py / test_interactions.py  렌더링·검색·필터 자동 점검 (python3 + quickjs)
 ├── dist/index.html  파일 하나짜리 배포본 (GitHub 웹 업로드용)
-├── deploy_pages.sh  main 의 사이트 파일을 gh-pages 로 밀어 실제 사이트를 갱신
+├── deploy_pages.sh  main 의 사이트 파일(img/ 포함)을 gh-pages 로 밀어 실제 사이트를 갱신
 └── README.md
 ```
 
@@ -43,10 +44,12 @@ hotdeal-page/
 | `unit` | 단가 (예: `kg당 2,952원`) |
 | `compare` | 타 쇼핑몰 실제 판매가 비교 한 줄 |
 | `meta` | 배송·리뷰 등 부가 정보 |
-| `deadline` / `deadlinePassed` | `07:00 마감` 같은 마감 표시 / 이미 지났으면 `true` |
+| `deadline` / `deadlinePassed` | `11/26 07:00 마감` 같은 마감 표시 / 이미 지났으면 `true` |
 | `optionNote` | 링크 기본 옵션과 다른 구성일 때 안내 (없으면 `""`) |
-| `link` | 쿠팡 파트너스 링크 (토스는 `""`) |
-| `image` | 쿠팡 상품 이미지 URL (토스는 `""` → 아이콘 타일로 표시) |
+| `link` | 쿠팡 파트너스 링크 (토스는 넣지 않음) |
+| `url` | 토스쇼핑 쉐어링크 (`https://toss.shopping/_m/...`) — 있으면 카드·버튼이 이 링크로 열림 |
+| `image` | 상품 이미지. 쿠팡은 썸네일 URL, 토스는 `img/ts-*.jpg` 로컬 경로 (없으면 아이콘 타일) |
+| `imageSource` | (토스) 원본 og:image 주소 — 나중에 이미지를 다시 받을 때 참고 |
 | `icon` | 이미지가 없거나 깨졌을 때 쓰는 이모지 |
 | `tags` | 검색에 걸리는 키워드 |
 
@@ -64,7 +67,7 @@ python3 build_single.py     # dist/index.html (한 파일 배포본) 다시 만�
 
 - **실제 주소: https://jaginaya1-del.github.io/-/** (저장소 `jaginaya1-del/-`, 공개 저장소)
 - GitHub Pages 게시 소스는 **`gh-pages` 브랜치 / 루트**입니다. main 을 푸시하는 것만으로는 사이트가 바뀌지 않으니, 데이터를 갱신한 뒤에는 꼭 `./deploy_pages.sh` 를 실행하세요.
-  - `./deploy_pages.sh` 는 index.html·style.css·app.js·data.js·data.json·.nojekyll 만 gh-pages 로 복사해 커밋·푸시합니다.
+  - `./deploy_pages.sh` 는 index.html·style.css·app.js·data.js·data.json·.nojekyll 과 `img/` 폴더를 gh-pages 로 복사해 커밋·푸시합니다.
 - 저장소 설정(Settings → Pages)에서 소스를 main 으로 바꾸고 싶다면 GitHub 웹 화면에서 직접 바꿔야 합니다. Pickle 의 GitHub 연결에는 저장소 관리(Administration) 권한이 없어 API 로는 이름 변경·Pages 설정 변경이 403 으로 막힙니다.
 - GitHub Pages 루트에서 열면 `data.json` 을 읽습니다. 파일 하나짜리 `dist/index.html` 을 올릴 때는 안에 데이터가 들어 있어 그대로 동작합니다.
 - 저장소 이름을 `hotdeal` 로 바꾸면 주소도 `https://jaginaya1-del.github.io/hotdeal/` 로 짧아지지만, 이름 변경은 위와 같이 웹 화면에서 해야 하고 바꾼 뒤 `deploy_pages.sh` 의 원격 주소도 함께 바뀝니다(origin 을 따라가므로 자동).
@@ -73,5 +76,6 @@ python3 build_single.py     # dist/index.html (한 파일 배포본) 다시 만�
 
 - 페이지는 `data.json` 을 먼저 읽고, 그게 안 되는 경우(파일을 직접 더블클릭해 열었을 때)에만 `data.js` 를 씁니다.
 - 쿠팡 이미지가 깨지면 자동으로 아이콘 타일로 바뀌므로 빈 이미지가 남지 않습니다.
-- 토스 카드는 링크가 없어서 `토스 앱에서 검색 · 이름 복사` 버튼으로 상품명을 복사합니다.
-- 푸터에 쿠팡 파트너스 대가성 문구가 항상 표시됩니다.
+- 토스 카드는 `url`(쉐어링크)이 있으면 카드 전체와 `토스쇼핑 보러가기 →` 버튼이 그 링크로 열립니다. `url` 이 없는 예전 항목은 `토스 앱에서 검색 · 이름 복사` 버튼으로 상품명을 복사합니다.
+- 토스 상품 이미지는 쉐어링크의 og:image 를 받아 640px JPEG 로 `img/` 에 저장해 씁니다(원본이 1~5MB 라 그대로 쓰면 느립니다).
+- 푸터에 쿠팡 파트너스 + 토스쇼핑 쉐어링크 대가성 문구가 항상 표시됩니다.

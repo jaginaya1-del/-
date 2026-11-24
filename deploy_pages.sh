@@ -6,6 +6,7 @@
 set -euo pipefail
 
 FILES="index.html style.css app.js data.js data.json .nojekyll"
+DIRS="img"
 REMOTE="${1:-$(git remote get-url origin)}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -13,6 +14,9 @@ trap 'rm -rf "$TMP"' EXIT
 git clone --quiet --depth 1 --branch gh-pages "$REMOTE" "$TMP/site"
 for f in $FILES; do
   cp "$f" "$TMP/site/$f"
+done
+for d in $DIRS; do
+  [ -d "$d" ] && cp -R "$d" "$TMP/site/"
 done
 
 cd "$TMP/site"

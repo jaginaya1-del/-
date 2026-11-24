@@ -82,12 +82,12 @@ def main() -> None:
     check("전체 탭 → 10개", ctx.eval("cardCount()") == 10)
 
     # 검색어
-    ctx.eval("var q=document.getElementById('q'); q.value='토마토'; fire(q,'input',{target:q})")
-    check("검색 '토마토' → 1개", ctx.eval("cardCount()") == 1, str(ctx.eval("cardCount()")))
-    check("검색 결과가 토마토 카드", ctx.eval("cards().indexOf('완숙토마토') > -1"))
+    ctx.eval("var q=document.getElementById('q'); q.value='아메리카노'; fire(q,'input',{target:q})")
+    check("검색 '아메리카노' → 1개", ctx.eval("cardCount()") == 1, str(ctx.eval("cardCount()")))
+    check("검색 결과가 조지아 카드", ctx.eval("cards().indexOf('조지아') > -1"))
 
-    ctx.eval("q.value='로션'; fire(q,'input',{target:q})")
-    check("검색 '로션' → 1개", ctx.eval("cardCount()") == 1, str(ctx.eval("cardCount()")))
+    ctx.eval("q.value='밀폐용기'; fire(q,'input',{target:q})")
+    check("검색 '밀폐용기' → 1개", ctx.eval("cardCount()") == 1, str(ctx.eval("cardCount()")))
 
     ctx.eval("q.value='쿠팡'; fire(q,'input',{target:q})")
     # '쿠팡'은 몰 이름 + 타몰 비교 문구에도 나오므로 5개보다 많이 걸리는 게 정상
@@ -98,10 +98,11 @@ def main() -> None:
     check("없는 검색어 → 빈 안내 표시", ctx.eval("document.getElementById('empty').hidden") is False)
 
     # 검색 + 탭 조합
-    ctx.eval("q.value='꿀'; fire(q,'input',{target:q}); fire(document.getElementById('tabs'),'click',{target:fakeTarget('coupang')})")
-    check("'꿀' + 쿠팡 탭 → 0개", ctx.eval("cardCount()") == 0, str(ctx.eval("cardCount()")))
+    ctx.eval("q.value='간장'; fire(q,'input',{target:q}); fire(document.getElementById('tabs'),'click',{target:fakeTarget('coupang')})")
+    check("'간장' + 쿠팡 탭 → 0개", ctx.eval("cardCount()") == 0, str(ctx.eval("cardCount()")))
     ctx.eval("fire(document.getElementById('tabs'),'click',{target:fakeTarget('toss')})")
-    check("'꿀' + 토스 탭 → 1개", ctx.eval("cardCount()") == 1, str(ctx.eval("cardCount()")))
+    check("'간장' + 토스 탭 → 1개", ctx.eval("cardCount()") == 1, str(ctx.eval("cardCount()")))
+    check("토스 카드에 쉐어링크 버튼", ctx.eval("cards().indexOf('토스쇼핑 보러가기') > -1"))
 
     bad = [r for r in results if not r[1]]
     for name, ok, detail in results:
