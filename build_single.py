@@ -8,6 +8,7 @@ import base64
 import json
 import mimetypes
 import pathlib
+import re
 
 BASE = pathlib.Path(__file__).resolve().parent
 OUT = BASE / "dist" / "index.html"
@@ -35,17 +36,19 @@ def main() -> None:
     data = json.loads((BASE / "data.json").read_text(encoding="utf-8"))
     data = inline_images(data)
 
-    html = html.replace(
-        '<link rel="stylesheet" href="style.css">',
-        "<style>\n" + css + "\n</style>",
+    html = re.sub(
+        r'<link rel="stylesheet" href="style\.css[^"]*">',
+        lambda m: "<style>\n" + css + "\n</style>",
+        html,
     )
-    html = html.replace(
-        '<script src="data.js"></script>\n<script src="app.js"></script>',
-        '<script>window.HOTDEAL_DATA = '
+    html = re.sub(
+        r'<script src="data\.js[^"]*"></script>\s*<script src="app\.js[^"]*"></script>',
+        lambda m: '<script>window.HOTDEAL_DATA = '
         + json.dumps(data, ensure_ascii=False, indent=2)
         + ";</script>\n<script>\n"
         + js
         + "\n</script>",
+        html,
     )
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
