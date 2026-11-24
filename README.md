@@ -16,6 +16,7 @@ hotdeal-page/
 ├── build_single.py  위 파일들을 index.html 하나로 묶기 (dist/index.html 생성)
 ├── test_render.py / test_interactions.py  렌더링·검색·필터 자동 점검 (python3 + quickjs)
 ├── dist/index.html  파일 하나짜리 배포본 (GitHub 웹 업로드용)
+├── deploy_pages.sh  main 의 사이트 파일을 gh-pages 로 밀어 실제 사이트를 갱신
 └── README.md
 ```
 
@@ -25,7 +26,8 @@ hotdeal-page/
    - `site.roundLabel` (예: `11/25 오후 2시`), `site.roundFull`, `site.updatedAt` 도 함께 바꿔 주세요.
    - `items` 배열에 상품을 넣습니다. 쿠팡 5개 + 토스 5개, 각 몰 안에서 `rank` 1~5.
 2. `python3 sync_data.py` 를 실행합니다. (`data.js` 가 다시 만들어집니다.)
-3. `git add -A && git commit -m "특가 갱신 11/25 오후 2시" && git push` 하면 1~2분 뒤 사이트에 반영됩니다.
+3. `git add -A && git commit -m "특가 갱신 11/25 오후 2시" && git push` 로 main 에 올린 뒤,
+   `./deploy_pages.sh` 를 실행하면 1~2분 뒤 사이트에 반영됩니다. (`deploy_pages.sh` 가 gh-pages 브랜치로 사이트 파일을 복사해 줍니다)
 
 데이터 항목 필드:
 
@@ -60,8 +62,12 @@ python3 build_single.py     # dist/index.html (한 파일 배포본) 다시 만�
 
 ## 배포 메모
 
+- **실제 주소: https://jaginaya1-del.github.io/-/** (저장소 `jaginaya1-del/-`, 공개 저장소)
+- GitHub Pages 게시 소스는 **`gh-pages` 브랜치 / 루트**입니다. main 을 푸시하는 것만으로는 사이트가 바뀌지 않으니, 데이터를 갱신한 뒤에는 꼭 `./deploy_pages.sh` 를 실행하세요.
+  - `./deploy_pages.sh` 는 index.html·style.css·app.js·data.js·data.json·.nojekyll 만 gh-pages 로 복사해 커밋·푸시합니다.
+- 저장소 설정(Settings → Pages)에서 소스를 main 으로 바꾸고 싶다면 GitHub 웹 화면에서 직접 바꿔야 합니다. Pickle 의 GitHub 연결에는 저장소 관리(Administration) 권한이 없어 API 로는 이름 변경·Pages 설정 변경이 403 으로 막힙니다.
 - GitHub Pages 루트에서 열면 `data.json` 을 읽습니다. 파일 하나짜리 `dist/index.html` 을 올릴 때는 안에 데이터가 들어 있어 그대로 동작합니다.
-- GitHub 연결이 읽기 전용이면 푸시가 막힙니다. 그때는 저장소 웹 화면에서 `dist/index.html` 을 `index.html` 로 업로드하고 Settings → Pages → Deploy from a branch(main / root) 를 켜면 됩니다.
+- 저장소 이름을 `hotdeal` 로 바꾸면 주소도 `https://jaginaya1-del.github.io/hotdeal/` 로 짧아지지만, 이름 변경은 위와 같이 웹 화면에서 해야 하고 바꾼 뒤 `deploy_pages.sh` 의 원격 주소도 함께 바뀝니다(origin 을 따라가므로 자동).
 
 ## 동작 메모
 
