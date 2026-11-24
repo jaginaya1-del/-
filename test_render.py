@@ -89,10 +89,12 @@ def main() -> None:
     grid = ctx.eval("document.getElementById('grid').innerHTML")
     roundbar = ctx.eval("document.getElementById('roundBar').innerHTML")
     legal = ctx.eval("document.getElementById('legal').innerHTML")
+    notice = ctx.eval("document.getElementById('noticeText').textContent")
     tabs = ctx.eval("document.getElementById('tabs').innerHTML")
     about = ctx.eval("document.getElementById('about').innerHTML")
 
     data = json.loads((BASE / "data.json").read_text(encoding="utf-8"))
+    html = (BASE / "index.html").read_text(encoding="utf-8")
     checks = []
 
     def check(name, ok, detail=""):
@@ -117,7 +119,12 @@ def main() -> None:
     check("옵션 안내 5개", grid.count('class="option-note"') == 5, str(grid.count('class="option-note"')))
     check("roundBar 채워짐", data["site"]["roundLabel"] in roundbar)
     check("roundSub 노출", "쿠팡 5선 + 토스 5선" in roundbar)
-    check("수수료 문구(쿠팡+토스)", "쿠팡 파트너스 및 토스쇼핑 쉐어링크" in legal)
+    check("수수료 고지 — 상단 요소에 data.json 문구", notice == data["site"]["partnersNotice"], notice[:40])
+    check("상단 고지가 헤더보다 앞(첫 화면 맨 위)",
+          html.index("<body>") < html.index('class="top-notice"') < html.index('<header class="hero"'))
+    check("index.html 정적 문구 = data.json 문구", data["site"]["partnersNotice"] in html)
+    check("푸터에 수수료 고지 중복 없음",
+          "쿠팡 파트너스" not in legal, "legal 에 남아 있음" if "쿠팡 파트너스" in legal else "")
     check("탭 3개", tabs.count("data-filter=") == 3, str(tabs.count("data-filter=")))
     check("탭 카운트(전체 10)", ">10<" in tabs or "10</span>" in tabs)
     check("about 채워짐", "라망도르" in about)
