@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF6EE">
+<title>흥장군의 오늘의 핫딜! | 라망도르 성은 님의 생활 특가</title>
+<meta name="description" content="라망도르 성은 님이 직접 고른 쿠팡·토스 생활 특가 아카이브. 매일 오전 6시·오후 2시, 타 쇼핑몰 실제 판매가와 비교해 메리트 있는 상품만 골라 담습니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="흥장군의 오늘의 핫딜!">
+<meta property="og:description" content="라망도르 성은 님이 직접 고른 생활 특가 아카이브 — 쿠팡 5선 + 토스 5선">
+<meta name="robots" content="index, follow">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-top">
+      <div class="avatar" aria-hidden="true">흥</div>
+      <div class="who">
+        <p class="shop">라망도르 · La main d'or</p>
+        <h1>흥장군의 오늘의 핫딜!</h1>
+        <p class="tagline">라망도르 성은 님이 직접 고른 생활 특가 아카이브</p>
+      </div>
+    </div>
+
+    <div class="round" id="roundBar">
+      <span class="dot" aria-hidden="true"></span>
+      <strong>오늘의 특가 불러오는 중…</strong>
+    </div>
+
+    <div class="search" id="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6"></path></svg>
+      <input id="q" type="search" inputmode="search" autocomplete="off"
+             placeholder="상품명으로 찾기 (예: 토마토, 로션)" aria-label="상품 검색">
+      <button type="button" class="clear" id="clear" aria-label="검색어 지우기">✕</button>
+    </div>
+
+    <nav class="tabs" id="tabs" role="tablist" aria-label="특가 종류"></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid" id="grid"></div>
+  <p class="empty" id="empty" hidden>검색 결과가 없어요.<br>다른 단어로 찾아보시겠어요?</p>
+
+  <section class="about" id="about" aria-label="소개"></section>
+</main>
+
+<footer>
+  <div class="wrap" id="legal"></div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
