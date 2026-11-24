@@ -23,7 +23,8 @@
     input: document.getElementById('q'),
     clear: document.getElementById('clear'),
     about: document.getElementById('about'),
-    legal: document.getElementById('legal')
+    legal: document.getElementById('legal'),
+    noticeText: document.getElementById('noticeText')
   };
 
   /* ---------- utils ---------- */
@@ -74,6 +75,10 @@
   /* ---------- render ---------- */
 
   function renderHead(site) {
+    // 수수료 고지 — 페이지 맨 위(index.html)에 항상 먼저 보이고, 내용은 data.json 값을 따른다.
+    if (el.noticeText && site.partnersNotice) {
+      el.noticeText.textContent = site.partnersNotice;
+    }
     if (el.roundBar) {
       el.roundBar.innerHTML =
         '<span class="dot" aria-hidden="true"></span>' +
@@ -92,9 +97,8 @@
         '<p style="color:#9C9187">' + esc(site.brandSub) + ' · ' + esc(site.shopNote) + '</p>';
     }
     if (el.legal) {      el.legal.innerHTML =
-        '<p class="legal"><strong>수수료 고지</strong> — ' + esc(site.partnersNotice) + '</p>' +
         '<p class="legal">표시된 가격은 ' + esc(site.roundFull) + ' 기준이며, 쿠팡 와우회원가·토스회원 할인가가 포함될 수 있습니다. ' +
-        '실시간 가격과 재고는 판매처 페이지에서 확인해 주세요.</p>' +
+        '실시간 가격과 재고는 판매처 페이지에서 확인해 주세요. 수수료 고지는 페이지 맨 위에 안내되어 있습니다.</p>' +
         '<p class="sign">© <b>' + esc(site.brandSub) + '</b> ' + esc(site.owner) + ' · ' + esc(site.shopNote) + '</p>';
     }
   }
