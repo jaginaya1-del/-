@@ -29,6 +29,7 @@ hotdeal-page/
 2. `python3 sync_data.py` 를 실행합니다. (`data.js` 가 다시 만들어집니다.)
 3. `git add -A && git commit -m "특가 갱신 11/25 오후 2시" && git push` 로 main 에 올린 뒤,
    `./deploy_pages.sh` 를 실행하면 1~2분 뒤 사이트에 반영됩니다. (`deploy_pages.sh` 가 gh-pages 브랜치로 사이트 파일을 복사해 줍니다)
+4. `index.html` 의 `?v=20261125b` (style.css·data.js·app.js) 를 다음 회차 문자열로 올려 주세요. GitHub Pages 가 파일을 10분간 캐시해서, 그대로 두면 갱신 직후 독자 화면에 옛 app.js·옛 데이터가 남을 수 있습니다.
 
 데이터 항목 필드:
 
