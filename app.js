@@ -7,8 +7,8 @@
   'use strict';
 
   var MALLS = {
-    coupang: { name: '쿠팡', className: 'coupang' },
-    toss: { name: '토스', className: 'toss' }
+    coupang: { name: '쿠팡', className: 'coupang', cta: '쿠팡에서 보러가기 →' },
+    toss: { name: '토스쇼핑', className: 'toss', cta: '토스쇼핑 보러가기 →' }
   };
 
   var state = { mall: 'all', q: '' };
@@ -78,7 +78,8 @@
       el.roundBar.innerHTML =
         '<span class="dot" aria-hidden="true"></span>' +
         '<strong>' + esc(site.roundLabel) + ' 업데이트</strong>' +
-        '<span>' + esc(site.roundFull) + ' · 쿠팡 5선 + 토스 5선</span>' +
+        '<span>' + esc(site.roundSub || site.roundFull) + '</span>' +
+        '<span>' + esc(site.roundFull) + '</span>' +
         '<span class="notice">' + esc(site.notice) + '</span>';
     }
     if (el.about) {
@@ -86,12 +87,12 @@
         '<h3>' + esc(site.brand) + ' ' + esc(site.owner) + ' 님이 고른 이유</h3>' +
         '<p>하루 두 번(오전 6시·오후 2시), 쿠팡과 토스에서 <b>실제 판매가를 다른 쇼핑몰과 직접 비교</b>해 ' +
         '메리트가 확인된 생활용품만 골라 담습니다. 광고비를 받고 올린 상품이 아니라, 장보는 사람 눈으로 고른 목록이에요.</p>' +
-        '<p>토스 특가는 <span class="accent">토스 앱에서만</span> 결제되는 상품이라 링크 대신 상품명을 복사해 검색할 수 있게 해두었습니다. ' +
-        '쿠팡 링크는 쿠팡 파트너스 링크예요.</p>' +
+        '<p>토스 특가는 <span class="accent">토스쇼핑 쉐어링크</span>로 바로 연결되고, 결제는 토스 앱·웹에서 이뤄집니다. ' +
+        '쿠팡 링크는 쿠팡 파트너스 링크예요. 링크로 들어가 사면 같은 가격에 저에게도 조금 남습니다.</p>' +
         '<p style="color:#9C9187">' + esc(site.brandSub) + ' · ' + esc(site.shopNote) + '</p>';
     }
     if (el.legal) {      el.legal.innerHTML =
-        '<p class="legal"><strong>쿠팡 파트너스 고지</strong> — ' + esc(site.partnersNotice) + '</p>' +
+        '<p class="legal"><strong>수수료 고지</strong> — ' + esc(site.partnersNotice) + '</p>' +
         '<p class="legal">표시된 가격은 ' + esc(site.roundFull) + ' 기준이며, 쿠팡 와우회원가·토스회원 할인가가 포함될 수 있습니다. ' +
         '실시간 가격과 재고는 판매처 페이지에서 확인해 주세요.</p>' +
         '<p class="sign">© <b>' + esc(site.brandSub) + '</b> ' + esc(site.owner) + ' · ' + esc(site.shopNote) + '</p>';
@@ -124,7 +125,9 @@
   }
 
   function cardHTML(item, site) {
-    var mall = MALLS[item.mall] || { name: '특가', className: 'coupang' };
+    var mall = MALLS[item.mall] || { name: '특가', className: 'coupang', cta: '보러가기 →' };
+    // 쿠팡은 link(파트너스 링크), 토스는 url(쉐어링크) — 어느 쪽이든 있으면 카드 전체가 링크가 된다.
+    var href = item.url || item.link || '';
     var thumbInner = item.image
       ? '<img src="' + esc(item.image) + '" alt="' + esc(item.short || item.title) +
         '" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-ph="' + esc(item.icon || '🛍️') + '">'
@@ -134,9 +137,9 @@
       ? '<span class="deadline' + (item.deadlinePassed ? ' passed' : '') + '">⏰ ' + esc(item.deadline) + '</span>'
       : '';
 
-    var thumb = item.link
-      ? '<a class="thumb" href="' + esc(item.link) + '" target="_blank" rel="noopener sponsored" ' +
-        'aria-label="' + esc(item.title) + ' 쿠팡에서 보기">' + thumbInner + deadline + '</a>'
+    var thumb = href
+      ? '<a class="thumb" href="' + esc(href) + '" target="_blank" rel="noopener sponsored" ' +
+        'aria-label="' + esc(item.title) + ' ' + esc(mall.name) + '에서 보기">' + thumbInner + deadline + '</a>'
       : '<div class="thumb">' + thumbInner + deadline + '</div>';
 
     var priceRow = '';
@@ -145,8 +148,9 @@
     if (item.listPrice) priceRow += '<span class="list-price">' + won(item.listPrice) + '</span>';
 
     var cta;
-    if (item.mall === 'coupang' && item.link) {
-      cta = '<a class="cta" href="' + esc(item.link) + '" target="_blank" rel="noopener sponsored">바로 보러가기 →</a>';
+    if (href) {
+      cta = '<a class="cta ' + esc(mall.className) + '" href="' + esc(href) + '" ' +
+        'target="_blank" rel="noopener sponsored">' + esc(mall.cta) + '</a>';
     } else {
       cta = '<button type="button" class="cta toss" data-copy="' + esc(item.title) + '">토스 앱에서 검색 · 이름 복사</button>';
     }
