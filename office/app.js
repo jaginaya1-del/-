@@ -63,6 +63,16 @@
            ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   }
 
+  function dayKey(d) {
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  function dayLabel(d) {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' +
+      days[d.getDay()] + ')';
+  }
+
   function toList(obj) {
     return Object.keys(obj || {}).map((k) => Object.assign({ id: k }, obj[k]));
   }
@@ -159,12 +169,19 @@
     }
 
     let prev = null;
+    let prevDay = '';
     list.innerHTML = items.map((m) => {
       const who = SENDERS[m.sender] || { emoji: '💬', role: m.role || '', own: false };
-      const grouped = prev && prev.sender === m.sender && Math.abs((m.ts || 0) - (prev.ts || 0)) < 5 * 60 * 1000;
+      const day = m.ts ? dayKey(new Date(m.ts)) : '';
+      const divider = day && day !== prevDay
+        ? '<div class="day-divider"><span>' + esc(dayLabel(new Date(m.ts))) + '</span></div>'
+        : '';
+      prevDay = day || prevDay;
+      const grouped = !divider && prev && prev.sender === m.sender &&
+        Math.abs((m.ts || 0) - (prev.ts || 0)) < 5 * 60 * 1000;
       prev = m;
       const time = m.timeStr || (m.ts ? fmtTime(new Date(m.ts)) : '');
-      return '' +
+      return divider + '' +
         '<article class="msg' + (who.own ? ' is-own' : '') + (grouped ? ' is-grouped' : '') + '">' +
           (grouped
             ? '<span class="msg-avatar" aria-hidden="true" style="background:transparent;border-color:transparent;box-shadow:none"></span>'
