@@ -534,7 +534,15 @@ a { color: inherit; text-decoration: none; }
   flex-wrap: wrap;
   gap: 6px;
   padding: 1px 2px 8px;
+  max-height: 123px;          /* 썸네일 2줄까지만 — 10장이면 넘칠 때만 스크롤 */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #D9C3A2 transparent;
 }
+.photo-tray::-webkit-scrollbar { width: 5px; }
+.photo-tray::-webkit-scrollbar-thumb { background: #D9C3A2; border-radius: 99px; }
+.photo-tray::-webkit-scrollbar-track { background: transparent; }
 .photo-tray[hidden] { display: none; }
 
 .photo-thumb {
