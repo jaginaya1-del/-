@@ -57,6 +57,15 @@
   .sw.off{background:#34d399;} .sw.late{background:#a78bfa;}
   .sw.seongeun{background:#93c5fd;} .sw.jeongmin{background:#fbbf24;}
   .sw.pickup{background:#fb7185;}
+  .lg.dim{opacity:.4;}
+
+  /* ===== 보기 필터 ===== */
+  .viewfilter{display:flex; gap:6px; margin:0 0 9px;}
+  .vfchip{
+    font:inherit; font-size:11.5px; font-weight:800; letter-spacing:-.2px; padding:6px 10px; border-radius:999px;
+    border:1.5px solid var(--line); background:#f8fafc; color:#475569; cursor:pointer; white-space:nowrap;
+  }
+  .vfchip.on{background:#2563eb; border-color:#2563eb; color:#fff; box-shadow:0 3px 9px rgba(37,99,235,.26);}
 
   /* ===== 카드 공통 ===== */
   .card{background:var(--card); border-radius:var(--radius); padding:12px; margin-top:10px; box-shadow:0 4px 14px rgba(27,35,51,.06);}
@@ -94,6 +103,7 @@
   .dot.pickup{background:#fb7185;}
   .cellflags{display:flex; flex-direction:column; align-items:center; gap:1px; min-height:12px;}
   .avail{font-size:7.5px; font-weight:800; color:#047857; background:#d1fae5; border-radius:4px; padding:0 2px; line-height:1.35; letter-spacing:-.3px; white-space:nowrap;}
+  .avail.hb.late{background:#ede9fe; color:#6d28d9;}
   @media (max-width:380px){ .avail{font-size:7px; letter-spacing:-.5px; padding:0 1px;} }
   .cwarn{font-size:9px; line-height:1; color:var(--warn);}
 
@@ -246,11 +256,11 @@
       </div>
     </div>
     <div class="legend">
-      <span class="lg"><i class="sw off"></i>남편 휴무일</span>
-      <span class="lg"><i class="sw late"></i>남편 외박/미귀가</span>
-      <span class="lg"><i class="sw seongeun"></i>성은 차량 사용</span>
-      <span class="lg"><i class="sw jeongmin"></i>정민 차량 사용</span>
-      <span class="lg"><i class="sw pickup"></i>픽업 요청</span>
+      <span class="lg" data-f="husband"><i class="sw off"></i>남편 휴무일</span>
+      <span class="lg" data-f="husband"><i class="sw late"></i>남편 외박/미귀가</span>
+      <span class="lg" data-f="car"><i class="sw seongeun"></i>성은 차량 사용</span>
+      <span class="lg" data-f="car"><i class="sw jeongmin"></i>정민 차량 사용</span>
+      <span class="lg" data-f="car"><i class="sw pickup"></i>픽업 요청</span>
     </div>
   </header>
 
@@ -260,6 +270,11 @@
       <div class="month" id="monthLabel">—</div>
       <button class="navbtn" id="nextMonth" type="button" aria-label="다음 달">›</button>
       <button class="today" id="todayBtn" type="button">오늘</button>
+    </div>
+    <div class="viewfilter" id="viewFilter">
+      <button class="vfchip on" data-filter="all" type="button">전체</button>
+      <button class="vfchip" data-filter="husband" type="button">남편 휴무·외박만</button>
+      <button class="vfchip" data-filter="car" type="button">차량·픽업만</button>
     </div>
     <div class="dows"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
     <div class="grid" id="grid"></div>
@@ -279,7 +294,7 @@
     </div>
     <div id="conflictArea"></div>
     <div class="list" id="scheduleList"></div>
-    <div class="subhead">🙋 정민·하선·준서 픽업 요청</div>
+    <div class="subhead" id="pickupHead">🙋 정민·하선·준서 픽업 요청</div>
     <div class="list" id="pickupList"></div>
   </section>
 
@@ -454,6 +469,15 @@
   };
   var TYPE_ORDER = ['off','late','seongeun','jeongmin'];
 
+  /* 보기 필터: all(전체) · husband(남편 휴무·외박만) · car(차량·픽업만) */
+  var FILTERS = ['all','husband','car'];
+  function isHusbandType(t){ return t === 'off' || t === 'late'; }
+  function passFilter(t){
+    if(state.filter === 'husband') return isHusbandType(t);
+    if(state.filter === 'car') return !isHusbandType(t);
+    return true;
+  }
+
   /* ================= 유틸 ================= */
   function $(s,r){ return (r||document).querySelector(s); }
   function $$(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
@@ -489,6 +513,10 @@
     pickups: {},
     role: ROLES.indexOf(lsGet('fcs.role','성은')) >= 0 ? lsGet('fcs.role','성은') : '성은',
     selected: TODAY,
+    filter: (function(){
+      var f = lsGet('fcs.filter','all');
+      return FILTERS.indexOf(f) >= 0 ? f : 'all';
+    })(),
     viewMonth: (function(){ var d = parseISO(TODAY); return new Date(d.getFullYear(), d.getMonth(), 1); })(),
     insts: {},
     pkInsts: {},
@@ -854,13 +882,15 @@
     $('#monthLabel').textContent = y + '년 ' + (m+1) + '월';
 
     var range = monthRange();
-    var list = buildInstances(range.start, range.end);
+    var list = buildInstances(range.start, range.end).filter(function(i){ return passFilter(i.type); });
     var idx = indexByDate(list);
     var hit = conflictMap(list);
     var pkDay = {};
-    buildPickupInstances(range.start, range.end).forEach(function(i){
-      pkDay[i.date] = (pkDay[i.date] || 0) + 1;
-    });
+    if(state.filter !== 'husband'){
+      buildPickupInstances(range.start, range.end).forEach(function(i){
+        pkDay[i.date] = (pkDay[i.date] || 0) + 1;
+      });
+    }
 
     var html = '';
     for(var d = range.start; d <= range.end; d = addDays(d,1)){
@@ -869,6 +899,7 @@
       var types = [];
       items.forEach(function(i){ if(types.indexOf(i.type) < 0) types.push(i.type); });
       var isOff = items.some(function(i){ return i.type === 'off'; });
+      var isLate = items.some(function(i){ return i.type === 'late'; });
       var hasConf = items.some(function(i){ return hit[i.key]; });
 
       var cls = 'cell';
@@ -878,7 +909,14 @@
 
       var dots = types.map(function(t){ return '<i class="dot ' + t + '"></i>'; }).join('')
                + (pkDay[d] ? '<i class="dot pickup"></i>' : '');
-      var flags = (isOff ? '<span class="avail">정민🚗가능</span>' : '') + (hasConf ? '<span class="cwarn">⚠</span>' : '');
+      var flags;
+      if(state.filter === 'husband'){
+        /* 남편 휴무·외박만: 차량 가능 배지·중복 경고 없이 휴무/외박만 표기 */
+        flags = (isOff ? '<span class="avail hb">휴무</span>' : '')
+              + (isLate ? '<span class="avail hb late">외박</span>' : '');
+      }else{
+        flags = (isOff ? '<span class="avail">정민🚗가능</span>' : '') + (hasConf ? '<span class="cwarn">⚠</span>' : '');
+      }
 
       html += '<button type="button" class="' + cls + '" data-date="' + d + '" aria-label="' + d + '">'
             +   '<span class="dnum">' + dt.getDate() + '</span>'
@@ -969,19 +1007,20 @@
   function renderDetail(){
     var sel = state.selected;
     var dt = parseISO(sel);
-    var list = buildInstances(sel, sel).filter(function(i){ return i.occDate === sel; });
+    var allList = buildInstances(sel, sel).filter(function(i){ return i.occDate === sel; });
+    var list = allList.filter(function(i){ return passFilter(i.type); });
     var hit = conflictMap(list);
     var pairs = conflictPairs(list);
 
     state.insts = {};
-    list.forEach(function(i){ state.insts[i.key] = i; });
+    allList.forEach(function(i){ state.insts[i.key] = i; });
 
     $('#detailDate').textContent = (dt.getMonth()+1) + '월 ' + dt.getDate() + '일 (' + DOW[dt.getDay()] + ')';
     $('#detailSub').textContent = sel + (sel === TODAY ? ' · 오늘' : '');
 
     var isOff = list.some(function(i){ return i.type === 'off'; });
     var badges = '';
-    if(isOff) badges += '<span class="badge avail">🟢 정민 차량 사용 가능</span>';
+    if(isOff && state.filter !== 'husband') badges += '<span class="badge avail">🟢 정민 차량 사용 가능</span>';
     if(pairs.length) badges += '<span class="badge conf">⚠ 차량 중복 ' + pairs.length + '건</span>';
     $('#detailBadges').innerHTML = badges;
 
@@ -1006,13 +1045,20 @@
     }
     $('#conflictArea').innerHTML = area;
 
-    var pickups = buildPickupInstances(sel, sel).filter(function(i){ return i.date === sel; });
+    var pickupsAll = buildPickupInstances(sel, sel).filter(function(i){ return i.date === sel; });
     state.pkInsts = {};
-    pickups.forEach(function(i){ state.pkInsts[i.key] = i; });
+    pickupsAll.forEach(function(i){ state.pkInsts[i.key] = i; });
+    var pickups = (state.filter === 'husband') ? [] : pickupsAll;
+
+    var emptyMsg = state.filter === 'husband'
+      ? '이 날짜에 남편 휴무·외박 일정이 없습니다.<br>위 <b>+ 일정</b>을 누르면 <b>남편 휴무일</b>로 바로 추가됩니다.'
+      : (state.filter === 'car'
+          ? '이 날짜에 차량 사용 일정이 없습니다.<br>위 <b>+ 일정</b>·<b>+ 픽업</b>으로 추가하세요.'
+          : '이 날짜에 등록된 일정이 없습니다.<br>오른쪽 위 <b>+ 일정</b>으로 추가하세요.');
 
     $('#scheduleList').innerHTML = list.length
       ? list.map(function(i){ return scheduleCardHTML(i, hit); }).join('')
-      : (pickups.length ? '' : '<div class="empty">이 날짜에 등록된 일정이 없습니다.<br>오른쪽 위 <b>+ 일정</b>으로 추가하세요.</div>');
+      : (pickups.length ? '' : '<div class="empty">' + emptyMsg + '</div>');
 
     $('#pickupList').innerHTML = pickups.length
       ? pickups.map(pickupCardHTML).join('')
@@ -1021,8 +1067,23 @@
 
   function renderAll(){
     renderRole();
+    renderFilter();
     renderCalendar();
     renderDetail();
+  }
+
+  /* ================= 렌더: 보기 필터 ================= */
+  function renderFilter(){
+    $$('#viewFilter .vfchip').forEach(function(b){
+      b.classList.toggle('on', b.dataset.filter === state.filter);
+    });
+    $$('.legend .lg').forEach(function(el){
+      el.classList.toggle('dim', state.filter !== 'all' && el.getAttribute('data-f') !== state.filter);
+    });
+    var showPickup = state.filter !== 'husband';
+    $('#addPickupBtn').classList.toggle('hidden', !showPickup);
+    $('#pickupHead').classList.toggle('hidden', !showPickup);
+    $('#pickupList').classList.toggle('hidden', !showPickup);
   }
 
   /* ================= 폼: 공통 ================= */
@@ -1198,7 +1259,7 @@
 
     if(mode === 'new'){
       form.sid = null;
-      form.type = 'seongeun';
+      form.type = (state.filter === 'husband') ? 'off' : 'seongeun';
       form.date = state.selected;
       form.allDay = false;
       form.start = '09:00';
@@ -1502,6 +1563,19 @@
     lsSet('fcs.role', state.role);
     renderRole();
     toast('내 역할: ' + state.role);
+  });
+
+  /* 보기 필터 (전체 / 남편 휴무·외박만 / 차량·픽업만) */
+  $('#viewFilter').addEventListener('click', function(e){
+    var b = e.target.closest('.vfchip');
+    if(!b) return;
+    var f = b.dataset.filter;
+    if(FILTERS.indexOf(f) < 0 || f === state.filter) return;
+    state.filter = f;
+    lsSet('fcs.filter', f);
+    renderAll();
+    toast(f === 'husband' ? '보기: 남편 휴무·외박만'
+        : (f === 'car' ? '보기: 차량·픽업만' : '보기: 전체'));
   });
 
   $('#prevMonth').addEventListener('click', function(){
