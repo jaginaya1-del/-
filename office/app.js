@@ -37,7 +37,8 @@
     sender: '성은',
     view: 'chat',
     busy: false,
-    online: null
+    online: null,
+    photos: []
   };
 
   /* ---------------- helpers ---------------- */
@@ -114,6 +115,134 @@
 
   function ytEmbeds(text) {
     return youtubeIds(text).map(ytEmbedCard).join('');
+  }
+
+  /* ---------------- 사진 ---------------- */
+
+  const MAX_PHOTOS = 4;
+  const MAX_SIDE = 960;
+  const JPEG_QUALITY = 0.78;
+
+  /* 본문·필드에서 이미지 주소 모으기 (data: / http, 확장자·쿼리스트링 허용) */
+  const IMG_URL_RE = /https?:\/\/[^\s<>"'`]+?\.(?:jpe?g|png|webp|gif)(?:\?[^\s<>"'`]*)?/gi;
+
+  function usableImage(v) {
+    const s = String(v == null ? '' : v).trim();
+    if (/^data:image\//i.test(s)) return s;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^(\/|\.\/)/.test(s)) return s;
+    return '';
+  }
+
+  function messageImages(m) {
+    const out = [];
+    const add = (v) => {
+      const u = usableImage(v);
+      if (u && out.indexOf(u) === -1 && out.length < 12) out.push(u);
+    };
+    const bag = m.images;
+    if (Array.isArray(bag)) bag.forEach(add);
+    else if (bag && typeof bag === 'object') Object.keys(bag).forEach((k) => add(bag[k]));
+    else add(bag);
+    add(m.image);
+    add(m.imageUrl);
+    const src = String(m.text == null ? '' : m.text);
+    let match;
+    IMG_URL_RE.lastIndex = 0;
+    while ((match = IMG_URL_RE.exec(src)) !== null) add(match[0]);
+    return out;
+  }
+
+  function bubbleImgs(list) {
+    if (!list.length) return '';
+    return '<div class="bubble-imgs' + (list.length === 1 ? ' is-one' : '') + '">' +
+      list.map((u) =>
+        '<button type="button" class="bubble-img" data-full="' + esc(u) + '" aria-label="사진 크게 보기">' +
+          '<img src="' + esc(u) + '" alt="첨부 사진" loading="lazy" decoding="async" referrerpolicy="no-referrer">' +
+        '</button>').join('') +
+    '</div>';
+  }
+
+  /* 선택한 사진을 최대 변 960px · JPEG 0.78 로 줄여 data URL 로 */
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const objUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+          const w = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+          const h = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error('canvas');
+          ctx.fillStyle = '#FFFFFF';           // 투명 PNG·WebP → 흰 배경
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+        } catch (err) {
+          reject(err);
+        } finally {
+          URL.revokeObjectURL(objUrl);
+        }
+      };
+      img.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('decode')); };
+      img.src = objUrl;
+    });
+  }
+
+  function renderPhotoTray() {
+    const tray = $('photoTray');
+    if (!state.photos.length) {
+      tray.hidden = true;
+      tray.innerHTML = '';
+      return;
+    }
+    tray.hidden = false;
+    tray.innerHTML = state.photos.map((src, i) =>
+      '<div class="photo-thumb">' +
+        '<img src="' + esc(src) + '" alt="" decoding="async">' +
+        '<button type="button" class="photo-thumb-x" data-remove="' + i + '" aria-label="첨부한 사진 ' + (i + 1) + ' 삭제">×</button>' +
+      '</div>').join('');
+  }
+
+  async function addPhotos(fileList) {
+    const files = Array.prototype.slice.call(fileList || []);
+    const pics = files.filter((f) => /^image\//i.test(f.type || '') || /\.(jpe?g|png|webp|gif|heic|heif)$/i.test(f.name || ''));
+    if (!pics.length) { toast('사진 파일만 붙일 수 있어요'); return; }
+
+    const room = MAX_PHOTOS - state.photos.length;
+    if (room <= 0) { toast('사진은 최대 ' + MAX_PHOTOS + '장까지 붙일 수 있어요'); return; }
+    if (pics.length > room) toast('사진은 최대 ' + MAX_PHOTOS + '장 — ' + room + '장만 붙였어요');
+
+    const targets = pics.slice(0, room);
+    for (let i = 0; i < targets.length; i++) {
+      try {
+        state.photos.push(await compressImage(targets[i]));
+        renderPhotoTray();
+      } catch (err) {
+        toast('사진을 읽지 못했어요 — 다른 사진으로 해보세요');
+      }
+    }
+  }
+
+  /* ---------------- 사진 크게 보기 ---------------- */
+
+  function openLightbox(src) {
+    if (!src) return;
+    $('lightboxImg').setAttribute('src', src);
+    $('lightbox').hidden = false;
+    document.body.classList.add('is-locked');
+  }
+
+  function closeLightbox() {
+    const lb = $('lightbox');
+    if (!lb || lb.hidden) return;
+    lb.hidden = true;
+    $('lightboxImg').removeAttribute('src');
+    document.body.classList.remove('is-locked');
   }
 
   function pad(n) { return String(n).padStart(2, '0'); }
@@ -247,6 +376,8 @@
         Math.abs((m.ts || 0) - (prev.ts || 0)) < 5 * 60 * 1000;
       prev = m;
       const time = m.timeStr || (m.ts ? fmtTime(new Date(m.ts)) : '');
+      const text = String(m.text == null ? '' : m.text);
+      const pics = bubbleImgs(messageImages(m));
       return divider + '' +
         '<article class="msg' + (who.own ? ' is-own' : '') + (grouped ? ' is-grouped' : '') + '">' +
           (grouped
@@ -257,8 +388,9 @@
               '<div class="msg-meta"><span class="msg-name">' + esc(m.sender) + '</span>' +
               '<span class="msg-role">' + esc(m.role || who.role) + '</span>' +
               '<span>' + esc(time) + '</span></div>') +
-            '<p class="bubble">' + linkify(m.text) + '</p>' +
-            ytEmbeds(m.text) +
+            (text.trim() ? '<p class="bubble">' + linkify(text) + '</p>' : '') +
+            pics +
+            ytEmbeds(text) +
           '</div>' +
         '</article>';
     }).join('');
@@ -341,7 +473,7 @@
         ? '<ul class="agent-log">' + mine.map((m) => {
             const r = ROOMS[m.channel] || ROOMS.main;
             return '<li><span class="log-room">' + r.icon + ' ' + r.name + '</span>' +
-              '<span class="log-text">' + esc(m.text) + '</span></li>';
+              '<span class="log-text">' + esc(String(m.text || '').trim() || '📷 사진') + '</span></li>';
           }).join('') + '</ul>'
         : '<ul class="agent-log"><li class="log-empty">아직 남긴 말이 없어요.</li></ul>';
 
@@ -454,7 +586,8 @@
   async function sendMessage() {
     const input = $('msgInput');
     const text = input.value.trim();
-    if (!text || state.busy) return;
+    const photos = state.photos.slice();
+    if ((!text && !photos.length) || state.busy) return;
     const btn = $('sendBtn');
     state.busy = true; btn.disabled = true;
 
@@ -467,10 +600,13 @@
       ts: now.getTime(),
       timeStr: fmtTime(now)
     };
+    if (photos.length) payload.images = photos;
 
     try {
       await write('messages/' + state.channel, 'POST', payload);
       input.value = '';
+      state.photos = [];
+      renderPhotoTray();
       const box = $('msgScroll');
       box.scrollTop = box.scrollHeight;
       await pull(true);
@@ -485,6 +621,36 @@
   $('sendBtn').addEventListener('click', sendMessage);
   $('msgInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendMessage(); }
+  });
+
+  /* 사진 첨부 */
+  $('photoBtn').addEventListener('click', () => $('photoInput').click());
+  $('photoInput').addEventListener('change', (e) => {
+    addPhotos(e.target.files);
+    e.target.value = '';
+  });
+  $('photoTray').addEventListener('click', (e) => {
+    const rm = e.target.closest('[data-remove]');
+    if (!rm) return;
+    const i = Number(rm.dataset.remove);
+    if (i >= 0 && i < state.photos.length) {
+      state.photos.splice(i, 1);
+      renderPhotoTray();
+    }
+  });
+
+  /* 사진 크게 보기 */
+  $('msgList').addEventListener('click', (e) => {
+    const btn = e.target.closest('.bubble-img');
+    if (!btn) return;
+    openLightbox(btn.dataset.full);
+  });
+  $('lightbox').addEventListener('click', (e) => {
+    if (e.target.closest('.lb-img')) return;   // 사진 자체 클릭은 그대로
+    closeLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLightbox();
   });
 
   $('taskForm').addEventListener('submit', async (e) => {
