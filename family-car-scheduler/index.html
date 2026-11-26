@@ -404,8 +404,8 @@
             <button class="fchip" data-dow="6" type="button">토</button>
           </div>
         </div>
-        <div class="hint hidden" id="pfRepeatHint"></div>
       </div>
+      <div class="hint hidden" id="pfRepeatHint"></div>
       <label class="flabel" for="pfPlace">장소</label>
       <input class="inp" type="text" id="pfPlace" placeholder="예: 학교 정문, 학원 앞" maxlength="60">
       <label class="flabel" for="pfNote">메모 (선택)</label>
@@ -501,7 +501,7 @@
                status:'requested', repeat:{freq:'none', days:[], day:1}, note:'' };
 
   var pform = { id:null, mode:'new', baseDate:null, date:'', time:'15:30', place:'', note:'',
-                requestedBy:null, acceptedBy:null, repeat:{ freq:'none', days:[], day:1 } };
+                requestedBy:null, acceptedBy:null, repeat:{ freq:'none', days:[], day:1 }, daysTouched:false };
 
   /* ================= 데이터 정규화 ================= */
   function normRepeat(s){
@@ -636,6 +636,14 @@
   function mkPickupInst(p, baseDate, occDate, ex){
     var rep = normPickupRepeat(p);
     var acc = (ex && hasKey(ex, 'acceptedBy')) ? (ex.acceptedBy || null) : (rep ? null : (p.acceptedBy || null));
+    var changed = false;
+    if(ex){
+      if(ex.moveTo && ex.moveTo !== baseDate) changed = true;
+      if(typeof ex.time === 'string' && ex.time !== (p.time || '')) changed = true;
+      if(typeof ex.place === 'string' && ex.place !== (p.place || '')) changed = true;
+      if(typeof ex.note === 'string' && ex.note !== (p.note || '')) changed = true;
+      if(typeof ex.requestedBy === 'string' && ex.requestedBy !== (p.requestedBy || '')) changed = true;
+    }
     return {
       key: p.id + '|' + baseDate,
       id: p.id, baseDate: baseDate, date: occDate,
@@ -645,7 +653,7 @@
       requestedBy: normWho({ requestedBy: (ex && ex.requestedBy) || p.requestedBy }),
       acceptedBy: acc,
       repeat: rep,
-      overridden: !!ex && !ex.skip,
+      overridden: changed,
       moved: false
     };
   }
@@ -1035,7 +1043,7 @@
     $('#pickupForm').classList.toggle('hidden', kind !== 'pickup');
     $('#sheetTitle').textContent = kind === 'schedule'
       ? (form.mode === 'new' ? '일정 추가' : (form.mode === 'instance' ? '이 날짜만 수정' : '일정 수정'))
-      : (pform.id ? '픽업 요청 수정' : '픽업 요청');
+      : (pform.mode === 'instance' ? '이 날짜만 수정' : (pform.id ? '픽업 요청 수정' : '픽업 요청'));
     $('#modal').scrollTop = 0;
     $('#sheet').scrollTop = 0;
     if(kind === 'schedule'){
@@ -1332,6 +1340,7 @@
     mode = mode || 'new';
     pform.mode = mode;
     pform.baseDate = null;
+    pform.daysTouched = false;
     if(mode === 'new'){
       pform.id = null;
       pform.date = state.selected;
@@ -1760,11 +1769,15 @@
     var d = Number(b.dataset.dow);
     var i = pform.repeat.days.indexOf(d);
     if(i >= 0) pform.repeat.days.splice(i,1); else pform.repeat.days.push(d);
+    pform.daysTouched = true;
     syncPickupForm();
   });
   $('#pfDate').addEventListener('change', function(){
     pform.date = this.value;
     if(pform.repeat.freq === 'monthly') pform.repeat.day = parseISO(pform.date).getDate();
+    if(!pform.daysTouched && (pform.repeat.freq === 'weekly' || pform.repeat.freq === 'biweekly')){
+      pform.repeat.days = [dowOf(pform.date)];
+    }
     syncPickupForm();
   });
   $('#pfExtra').addEventListener('click', function(e){
