@@ -413,10 +413,10 @@ a { color: inherit; text-decoration: none; }
 
 .chips {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 5px;
   padding: 1px 1px 8px;
-  overflow-x: auto;
   scrollbar-width: none;
 }
 .chips::-webkit-scrollbar { display: none; }
