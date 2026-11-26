@@ -149,11 +149,18 @@
   .mini.danger{color:#be123c; border-color:#fecdd3; background:#fff1f2;}
 
   /* 픽업 카드 */
-  .pcard{border:1.5px solid #e2e8f0; border-radius:13px; padding:9px 10px; background:#fff;}
+  .pcard{border:1.5px solid #e2e8f0; border-radius:13px; padding:9px 10px 9px 12px; background:#fff; position:relative; overflow:hidden;}
+  .pcard::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:#cbd5e1;}
+  .pcard.who-jeongmin::before{background:var(--c-jeongmin);}
+  .pcard.who-haseon::before{background:#ec4899;}
+  .pcard.who-junseo::before{background:#0891b2;}
   .pcard.done{background:#f0fdf4; border-color:#bbf7d0;}
   .p-row1{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:13px; font-weight:800;}
   .p-time{color:#0f172a;}
-  .p-who{font-size:10px; font-weight:700; color:#64748b; background:#f1f5f9; border-radius:6px; padding:2px 6px;}
+  .p-who{font-size:10px; font-weight:800; color:#64748b; background:#f1f5f9; border-radius:6px; padding:2px 7px; border:1px solid #e2e8f0;}
+  .p-who.who-jeongmin{background:#fffbeb; color:#b45309; border-color:#fde68a;}
+  .p-who.who-haseon{background:#fdf2f8; color:#be185d; border-color:#fbcfe8;}
+  .p-who.who-junseo{background:#ecfeff; color:#0e7490; border-color:#a5f3fc;}
   .p-state{font-size:10px; font-weight:800; border-radius:6px; padding:2px 7px; margin-left:auto;}
   .p-state.pending{background:#fff7ed; color:#b45309; border:1px dashed #f59e0b;}
   .p-state.accepted{background:#dcfce7; color:#15803d;}
@@ -191,7 +198,7 @@
   .fchip.on{color:#fff; border-color:transparent;}
   .fchip.on.t-off{background:var(--c-off);} .fchip.on.t-late{background:var(--c-late);}
   .fchip.on.t-seongeun{background:var(--c-seongeun);} .fchip.on.t-jeongmin{background:var(--c-jeongmin);}
-  #sfCars .fchip.on,#sfStatus .fchip.on{background:#2563eb;}
+  #sfCars .fchip.on,#sfStatus .fchip.on,#pfWho .fchip.on{background:#2563eb;}
   .week .fchip{padding:6px 0; width:34px; text-align:center;}
   .week .fchip.on{background:#2563eb;}
   .conflict{
@@ -261,11 +268,11 @@
     </div>
     <div id="conflictArea"></div>
     <div class="list" id="scheduleList"></div>
-    <div class="subhead">🙋 정민 픽업 요청</div>
+    <div class="subhead">🙋 정민·하선·준서 픽업 요청</div>
     <div class="list" id="pickupList"></div>
   </section>
 
-  <div class="footer-note">가족 3명 · 차 2대(씨라 · 루핀) · 실시간 공유</div>
+  <div class="footer-note">가족 5명 · 차 2대(씨라 · 루핀) · 실시간 공유</div>
 </div>
 
 <!-- ================= 일정/픽업 입력 시트 ================= -->
@@ -355,6 +362,12 @@
 
     <!-- 픽업 폼 -->
     <div id="pickupForm" class="hidden">
+      <label class="flabel">요청자</label>
+      <div class="chips wrap" id="pfWho">
+        <button class="fchip" data-who="정민" type="button">정민</button>
+        <button class="fchip" data-who="하선" type="button">하선</button>
+        <button class="fchip" data-who="준서" type="button">준서</button>
+      </div>
       <label class="flabel" for="pfDate">날짜</label>
       <input class="inp" type="date" id="pfDate">
       <label class="flabel" for="pfTime">시간</label>
@@ -363,7 +376,7 @@
       <input class="inp" type="text" id="pfPlace" placeholder="예: 학교 정문, 학원 앞" maxlength="60">
       <label class="flabel" for="pfNote">메모 (선택)</label>
       <textarea class="inp" id="pfNote" rows="2" placeholder="예: 5시까지, 짐이 있어요" maxlength="200"></textarea>
-      <div class="hint" id="pfHint" style="margin-top:10px">정민이가 차를 못 쓸 때 올리는 요청입니다. 성은·남편이 수락하면 바로 표시됩니다.</div>
+      <div class="hint" id="pfHint" style="margin-top:10px">정민·하선·준서가 차를 못 쓸 때 올리는 요청입니다. 성은·남편이 수락하면 바로 표시됩니다.</div>
       <div class="sheet-actions">
         <button class="btn primary wide" id="pfSave" type="button">픽업 요청 등록</button>
         <button class="btn wide" id="pfCancel" type="button">취소</button>
@@ -383,6 +396,9 @@
   var DB = 'https://heung-office-default-rtdb.firebaseio.com/apps/family-car-2026/';
   var DOW = ['일','월','화','수','목','금','토'];
   var ROLES = ['성은','남편','정민'];
+  var PICKUP_WHO = ['정민','하선','준서'];
+  var WHO_CLASS = { '정민':'jeongmin', '하선':'haseon', '준서':'junseo' };
+  function normWho(p){ var r = p && p.requestedBy; return PICKUP_WHO.indexOf(r) >= 0 ? r : '정민'; }
   var CARS = { cira:'씨라', lupin:'루핀' };
   var TYPES = {
     off:      { label:'남편 휴무일',      car:false },
@@ -768,7 +784,8 @@
 
   function pickupCardHTML(p){
     var accepted = p.acceptedBy || null;
-    var cls = 'pcard' + (accepted ? ' done' : '');
+    var who = normWho(p);
+    var cls = 'pcard who-' + WHO_CLASS[who] + (accepted ? ' done' : '');
     var stateTag = accepted
       ? '<span class="p-state accepted">✅ ' + esc(accepted) + ' 수락</span>'
       : '<span class="p-state pending">수락 대기</span>';
@@ -778,7 +795,7 @@
              + (accepted === '남편' ? '남편 수락중' : '남편 수락') + '</button>';
     return '<div class="' + cls + '" data-id="' + esc(p.id) + '">'
          +   '<div class="p-row1"><span class="p-time">🕘 ' + esc(p.time || '') + '</span>'
-         +     '<span class="p-who">' + esc(p.requestedBy || '정민') + ' 요청</span>' + stateTag + '</div>'
+         +     '<span class="p-who who-' + WHO_CLASS[who] + '">' + esc(who) + ' 요청</span>' + stateTag + '</div>'
          +   '<div class="p-place">📍 ' + esc(p.place || '') + '</div>'
          +   (p.note ? '<div class="p-note">' + esc(p.note) + '</div>' : '')
          +   '<div class="sc-act">' + btnS + btnH
@@ -1127,14 +1144,22 @@
   }
 
   /* ================= 폼: 픽업 ================= */
+  function syncPickupWho(){
+    $$('#pfWho .fchip').forEach(function(b){
+      b.classList.toggle('on', b.dataset.who === pform.requestedBy);
+    });
+  }
+
   function openPickupForm(p){
     pform.id = p ? p.id : null;
     pform.date = p ? p.date : state.selected;
     pform.time = p ? (p.time || '15:30') : '15:30';
     pform.place = p ? (p.place || '') : '';
     pform.note = p ? (p.note || '') : '';
-    pform.requestedBy = p ? (p.requestedBy || null) : state.role;
+    pform.requestedBy = p ? normWho(p)
+      : (PICKUP_WHO.indexOf(state.role) >= 0 ? state.role : '정민');
     pform.acceptedBy = p ? (p.acceptedBy || null) : null;
+    syncPickupWho();
 
     $('#pfDate').value = pform.date;
     $('#pfTime').value = pform.time;
@@ -1160,7 +1185,7 @@
       time: pform.time,
       place: pform.place,
       note: pform.note,
-      requestedBy: pform.requestedBy || '정민',
+      requestedBy: PICKUP_WHO.indexOf(pform.requestedBy) >= 0 ? pform.requestedBy : '정민',
       acceptedBy: pform.acceptedBy || null,
       updatedAt: Date.now()
     };
@@ -1363,6 +1388,12 @@
   });
 
   /* 폼: 픽업 */
+  $('#pfWho').addEventListener('click', function(e){
+    var b = e.target.closest('.fchip');
+    if(!b) return;
+    pform.requestedBy = b.dataset.who;
+    syncPickupWho();
+  });
   $('#pfSave').addEventListener('click', savePickup);
   $('#pfCancel').addEventListener('click', closeModal);
   $('#pfExtra').addEventListener('click', function(e){
