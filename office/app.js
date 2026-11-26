@@ -163,8 +163,8 @@
     const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
 
     if (!items.length) {
-      list.innerHTML = '<div class="empty"><b>' + esc(meta.icon + ' ' + meta.name) + '</b>은 아직 조용해요.<br>' +
-        '아래에서 대장님의 첫 지시를 내려 주세요 🫡</div>';
+      list.innerHTML = '<div class="empty"><b>' + esc(meta.icon + ' ' + meta.name) + '</b> — 아직 조용해요.<br>' +
+        '아래에서 대장님의 첫 말을 건네 보세요 🫡</div>';
       return;
     }
 
@@ -457,7 +457,7 @@
     try {
       await write('tasks/' + id, 'PATCH', { status: next });
       await pull(true);
-      toast('상태를 「' + STATUS[next].label + '」(으)로 바꿨어요');
+      toast('상태를 「' + STATUS[next].label + '」로 바꿨어요');
     } catch (err) {
       toast('변경 실패 — 연결을 확인해 주세요');
       await pull(true);
