@@ -71,16 +71,16 @@
     haseon:  '하선 사원'
   };
 
-  /* AI한도 — 비서현황과 같은 DB 키(lamang/sub/husband/haseon)에 기록한다 */
-  const KEY_BY_NAME = {};
-  Object.keys(AGENT_KEYS).forEach(function (k) { KEY_BY_NAME[AGENT_KEYS[k]] = k; });
-
-  const QUOTA = {
-    ok:    { label: '🟢 여유',      short: '여유',     cls: 'ok' },
-    warn:  { label: '🟡 주의',      short: '주의',     cls: 'warn' },
-    limit: { label: '🔴 한도 임박', short: '한도 임박', cls: 'limit' }
-  };
-  const QUOTA_ORDER = ['ok', 'warn', 'limit'];
+  /* AI한도 — 오늘(KST) 비서실 기록을 자동으로 세어 단계 배지·게이지로 보여준다 */
+  const QUOTA_LEVELS = [
+    { key: 'ok',   label: '🟢 여유', cls: 'ok',   min: 0 },
+    { key: 'warn', label: '🟡 보통', cls: 'warn', min: 5 },
+    { key: 'busy', label: '🔴 많음', cls: 'busy', min: 12 }
+  ];
+  const QUOTA_FULL = 12;      /* 게이지가 꽉 차는 점수 = '많음' 기준 */
+  const POINT_TALK = 1;       /* 보고·대화 1건 */
+  const POINT_WORK = 2;       /* 작업 1건 */
+  const KST_OFFSET = 9 * 60 * 60 * 1000;
 
   const STATUS = {
     pending: { label: '대기', cls: 'pending' },
@@ -105,8 +105,7 @@
     view: 'chat',
     busy: false,
     online: null,
-    photos: [],
-    quotaDraft: {}          /* 아직 저장하지 않은 한도 메모 */
+    photos: []
   };
 
   /* ---------------- helpers ---------------- */
@@ -328,6 +327,18 @@
 
   function dayKey(d) {
     return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  /* 기기 시간대와 상관없이 한국 시간(Asia/Seoul, UTC+9) 기준 날짜·시각 */
+  function kstDay(ms) {
+    const d = new Date((Number(ms) || 0) + KST_OFFSET);
+    return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate());
+  }
+
+  function kstClock(ms) {
+    const d = new Date((Number(ms) || 0) + KST_OFFSET);
+    const h = d.getUTCHours();
+    return (h < 12 ? '오전 ' : '오후 ') + (h % 12 || 12) + ':' + pad(d.getUTCMinutes());
   }
 
   function dayLabel(d) {
@@ -634,80 +645,111 @@
     }).join('');
   }
 
-  /* ---------------- AI한도 ---------------- */
+  /* ---------------- AI한도 — 오늘 활동량 자동 집계 ---------------- */
 
   function quotaTargets() {
     /* 성은 님 본인은 빼고, PEOPLE 순서(팀장 → 대리 → 사원) 그대로 */
-    return PEOPLE.filter(function (p) { return !p.own && KEY_BY_NAME[p.name]; })
+    return PEOPLE.filter(function (p) { return !p.own; })
       .sort(function (a, b) { return a.rank - b.rank; });
+  }
+
+  /* 본문에 불린 이름을 담당자로 — '@all'은 네 명 모두 */
+  function mentionTargets(text) {
+    const src = String(text == null ? '' : text);
+    const hit = {};
+    MENTIONS.forEach(function (it) {
+      if (!it.keys.some(function (k) { return src.indexOf(k) !== -1; })) return;
+      if (it.name === '전원') {
+        quotaTargets().forEach(function (p) { hit[p.name] = true; });
+        return;
+      }
+      hit[it.name] = true;
+    });
+    return Object.keys(hit);
+  }
+
+  /* 오늘(KST) 비서실 기록 — 말한 건수 · 맡은 작업 건수 · 마지막 활동 시각 */
+  function todayActivity() {
+    const today = kstDay(Date.now());
+    const out = {};
+    quotaTargets().forEach(function (p) {
+      out[p.name] = { talk: 0, work: 0, lastMs: 0 };
+    });
+
+    /* 1) 회의실 세 채널 — 오늘 그 비서가 남긴 말 */
+    Object.keys(ROOMS).forEach(function (ch) {
+      channelMessages(ch).forEach(function (m) {
+        if (!m.ts || kstDay(m.ts) !== today) return;
+        const who = personName(m.sender);
+        const s = out[who];
+        if (!s) return;                    /* 성은 님·명부 밖 발신자는 집계에서 뺀다 */
+        s.talk += 1;
+        const ms = Number(m.ts) || 0;
+        if (ms > s.lastMs) s.lastMs = ms;
+      });
+    });
+
+    /* 2) 작업실 — 오늘 올린 작업 중 그 비서가 맡은 건 ('공동'은 개인 집계에서 뺀다) */
+    toList(room().tasks || {}).forEach(function (t) {
+      if (String(t.createdAt || '').slice(0, 10) !== today) return;
+      const who = personName(t.assignee);
+      if (!out[who]) return;
+      out[who].work += 1;
+    });
+
+    /* 3) 지휘실 — 오늘 성은 님이 이름을 불러 내린 지시 */
+    channelMessages('command').forEach(function (m) {
+      if (!m.ts || kstDay(m.ts) !== today) return;
+      if (personName(m.sender) !== '성은' || !m.taskStatus) return;
+      mentionTargets(m.text).forEach(function (name) {
+        if (out[name]) out[name].work += 1;
+      });
+    });
+
+    return out;
+  }
+
+  function quotaLevel(score) {
+    for (let i = QUOTA_LEVELS.length - 1; i >= 1; i--) {
+      if (score >= QUOTA_LEVELS[i].min) return QUOTA_LEVELS[i];
+    }
+    return QUOTA_LEVELS[0];
   }
 
   function renderQuota() {
     const list = $('quotaList');
     if (!list) return;
-    /* 메모를 입력하는 중에는 다시 그리지 않는다 (커서·입력 보존) */
-    const act = document.activeElement;
-    if (act && act.closest && act.closest('#quotaList')) return;
 
-    const agents = room().agents || {};
+    const stats = todayActivity();
+
     list.innerHTML = quotaTargets().map(function (p) {
-      const key = KEY_BY_NAME[p.name];
-      const a = agents[key] || {};
-      const q = QUOTA[a.quotaStatus];
-      const badge = q
-        ? '<span class="quota-badge ' + q.cls + '">' + q.label + '</span>'
-        : '<span class="quota-badge none">미확인</span>';
-      const note = state.quotaDraft[key] != null
-        ? state.quotaDraft[key]
-        : String(a.quotaNote == null ? '' : a.quotaNote);
+      const s = stats[p.name] || { talk: 0, work: 0, lastMs: 0 };
+      const score = s.talk * POINT_TALK + s.work * POINT_WORK;
+      const lv = quotaLevel(score);
+      const pct = Math.max(0, Math.min(100, Math.round(score / QUOTA_FULL * 100)));
+      const last = s.lastMs ? kstClock(s.lastMs) : '오늘 기록 없음';
 
       return '' +
-        '<article class="quota-card' + (q ? ' q-' + q.cls : '') + '" data-quota="' + esc(key) + '">' +
+        '<article class="quota-card q-' + lv.cls + '" data-quota="' + esc(p.name) + '">' +
           '<div class="quota-head">' +
             '<span class="quota-emoji" aria-hidden="true">' + esc(p.emoji) + '</span>' +
             '<div class="quota-id">' +
               '<h3 class="quota-name">' + esc(p.name) + '</h3>' +
-              (p.name.indexOf(p.title) === -1 ? '<p class="quota-role">' + esc(p.title) + '</p>' : '') +
             '</div>' +
-            badge +
+            '<span class="quota-badge ' + lv.cls + '">' + lv.label + '</span>' +
           '</div>' +
-          '<div class="quota-modes" role="group" aria-label="' + esc(p.name) + ' AI 한도 상태">' +
-            QUOTA_ORDER.map(function (k) {
-              const on = a.quotaStatus === k;
-              return '<button type="button" class="quota-btn ' + QUOTA[k].cls + (on ? ' is-current' : '') + '"' +
-                ' data-quota-set="' + k + '"' +
-                (on ? ' disabled aria-pressed="true"' : ' aria-pressed="false"') + '>' +
-                QUOTA[k].short + '</button>';
-            }).join('') +
+          '<div class="quota-gauge" role="img" aria-label="' + esc(p.name) + ' 오늘 활동 ' + score + '점 (많음 기준 ' + QUOTA_FULL + '점)">' +
+            '<span class="quota-gauge-tick" style="left:41.7%" aria-hidden="true"></span>' +
+            '<span class="quota-gauge-fill ' + lv.cls + '" style="width:' + pct + '%"></span>' +
           '</div>' +
-          '<div class="quota-note-row">' +
-            '<input type="text" class="quota-note" maxlength="80" autocomplete="off" enterkeyhint="done" ' +
-              'placeholder="예: 70% 남음, 아껴 쓰기" aria-label="' + esc(p.name) + ' 한도 메모" ' +
-              'value="' + esc(note) + '">' +
-            '<button type="button" class="quota-save">저장</button>' +
+          '<div class="quota-gauge-foot">' +
+            '<span class="quota-score">오늘 활동 <b>' + score + '</b>점</span>' +
+            '<span class="quota-scale">말 1점 · 작업 2점</span>' +
           '</div>' +
-          '<p class="quota-stamp">' +
-            (a.quotaUpdatedAt ? '🕒 마지막 기록 ' + esc(a.quotaUpdatedAt) : '아직 기록 없음') +
-          '</p>' +
+          '<p class="quota-detail">오늘 말 <b>' + s.talk + '</b>건 · 작업 <b>' + s.work + '</b>건' +
+            '<span class="quota-last"> · 마지막 활동 ' + esc(last) + '</span></p>' +
         '</article>';
     }).join('');
-  }
-
-  async function saveQuota(key, patch) {
-    if (!key) return false;
-    const act = document.activeElement;
-    if (act && act.closest && act.closest('#quotaList')) act.blur();   /* 저장 뒤 새로 그리기 위해 */
-    try {
-      await write('agents/' + key, 'PATCH',
-        Object.assign({ quotaUpdatedAt: fmtStamp(new Date()) }, patch));
-      delete state.quotaDraft[key];
-      await pull(true);
-      return true;
-    } catch (err) {
-      toast('저장 실패 — 연결을 확인해 주세요');
-      await pull(true);
-      return false;
-    }
   }
 
   function renderMemos() {
@@ -935,51 +977,7 @@
     }
   });
 
-  /* AI한도 — 상태 바꾸기 · 메모 저장 */
-
-  $('quotaList').addEventListener('click', async (e) => {
-    const card = e.target.closest('[data-quota]');
-    if (!card) return;
-    const key = card.dataset.quota;
-
-    const setBtn = e.target.closest('[data-quota-set]');
-    if (setBtn) {
-      if (setBtn.disabled) return;
-      card.querySelectorAll('[data-quota-set]').forEach((b) => { b.disabled = true; });
-      const ok = await saveQuota(key, { quotaStatus: setBtn.dataset.quotaSet });
-      if (ok) toast('「' + QUOTA[setBtn.dataset.quotaSet].short + '」로 기록했어요 ⚡');
-      return;
-    }
-
-    const saveBtn = e.target.closest('.quota-save');
-    if (saveBtn) {
-      const input = card.querySelector('.quota-note');
-      const text = input ? input.value.trim() : '';
-      saveBtn.disabled = true;
-      const ok = await saveQuota(key, { quotaNote: text || null });
-      if (ok) toast(text ? '한도 메모를 저장했어요 ⚡' : '한도 메모를 지웠어요');
-    }
-  });
-
-  $('quotaList').addEventListener('input', (e) => {
-    const input = e.target.closest('.quota-note');
-    if (!input) return;
-    const card = input.closest('[data-quota]');
-    if (card) state.quotaDraft[card.dataset.quota] = input.value;
-  });
-
-  $('quotaList').addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' || e.isComposing) return;
-    const input = e.target.closest('.quota-note');
-    if (!input) return;
-    e.preventDefault();
-    const card = input.closest('[data-quota]');
-    if (!card) return;
-    const text = input.value.trim();
-    saveQuota(card.dataset.quota, { quotaNote: text || null }).then((ok) => {
-      if (ok) toast(text ? '한도 메모를 저장했어요 ⚡' : '한도 메모를 지웠어요');
-    });
-  });
+  /* AI한도는 오늘 기록을 자동으로 세므로 따로 저장·입력하지 않는다 */
 
   $('memoForm').addEventListener('submit', async (e) => {
     e.preventDefault();

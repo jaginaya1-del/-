@@ -8,7 +8,7 @@
 <meta name="description" content="흥장군 비서실 — 성은님 전용 AI 합동작업실. 회의실·작업실·비서현황·AI한도·메모.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
-<link rel="stylesheet" href="style.css?v=20261127d">
+<link rel="stylesheet" href="style.css?v=20261127e">
 </head>
 <body>
 
@@ -143,12 +143,14 @@
     <section class="view" id="view-quota" aria-label="AI한도">
       <div class="view-scroll">
         <div class="view-body">
-          <p class="section-note">비서별 AI 사용 한도 — 상태를 눌러 바꾸고, 남은 양을 한 줄로 적어 두세요</p>
-          <div class="quota-list" id="quotaList"></div>
-          <div class="card guide-card">
-            <h2 class="card-title">⚡ 이렇게 씁니다</h2>
-            <p>각 비서 카드에서 <b>여유 · 주의 · 한도 임박</b> 중 하나를 누르면 바로 저장됩니다. 메모칸에는 <b>남은 양·아껴 쓸 일</b>을 한 줄로 적고 <b>저장</b>을 누르면 됩니다. 여기 적은 내용은 비서실에 들어오는 모두가 함께 봅니다.</p>
+          <p class="section-note">오늘 비서실 활동량 자동 집계예요 (여유 · 보통 · 많음)</p>
+          <div class="quota-legend" aria-hidden="true">
+            <span class="ok">🟢 0~4점</span>
+            <span class="warn">🟡 5~11점</span>
+            <span class="busy">🔴 12점 이상</span>
           </div>
+          <div class="quota-list" id="quotaList"></div>
+          <p class="quota-foot-note">* 비서실에 남긴 기록 기준이며, 개인 채팅·외부 작업량은 포함되지 않습니다.</p>
         </div>
       </div>
     </section>
@@ -191,6 +193,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20261127d"></script>
+<script src="app.js?v=20261127e"></script>
 </body>
 </html>
