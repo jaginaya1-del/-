@@ -145,6 +145,7 @@
   .tag.req{background:#fff7ed; color:#b45309; border:1px dashed #f59e0b;}
   .tag.bad{background:#fee2e2; color:#b91c1c;}
   .tag.moved{background:#ede9fe; color:#5b21b6;}
+  .tag.rep{background:#eef2ff; color:#4338ca;}
   .sc-meta{font-size:11.5px; color:#475569; margin-top:3px; font-weight:600;}
   .sc-note{font-size:11.5px; color:#334155; margin-top:3px; background:rgba(255,255,255,.7); border-radius:8px; padding:3px 7px;}
   .sc-act{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;}
@@ -174,6 +175,7 @@
   .p-state.accepted{background:#dcfce7; color:#15803d;}
   .p-place{font-size:12px; color:#334155; margin-top:3px; font-weight:600;}
   .p-note{font-size:11.5px; color:#475569; margin-top:2px;}
+  .p-tags{display:flex; gap:4px; flex-wrap:wrap; margin-top:4px;}
 
   /* ===== 모달 ===== */
   .modal{position:fixed; inset:0; background:rgba(15,23,42,.5); display:flex; align-items:flex-end; justify-content:center; z-index:50; padding:0;}
@@ -336,6 +338,7 @@
         <select class="inp" id="sfRepeat">
           <option value="none">반복 안 함</option>
           <option value="weekly">매주 (요일 선택)</option>
+          <option value="biweekly">2주마다 (격주 · 요일 선택)</option>
           <option value="monthly">매월 (해당 일자)</option>
         </select>
         <div id="sfWeekWrap" class="hidden">
@@ -381,6 +384,28 @@
       <input class="inp" type="date" id="pfDate">
       <label class="flabel" for="pfTime">시간</label>
       <input class="inp" type="time" id="pfTime">
+      <div id="pfRepeatWrap">
+        <label class="flabel" for="pfRepeat">반복</label>
+        <select class="inp" id="pfRepeat">
+          <option value="none">반복 안 함</option>
+          <option value="weekly">1주마다 (매주)</option>
+          <option value="biweekly">2주마다 (격주)</option>
+          <option value="monthly">매월 (해당 일자)</option>
+        </select>
+        <div id="pfWeekWrap" class="hidden">
+          <label class="flabel">반복 요일 (여러 개 선택 가능)</label>
+          <div class="chips week" id="pfWeekdays">
+            <button class="fchip" data-dow="0" type="button">일</button>
+            <button class="fchip" data-dow="1" type="button">월</button>
+            <button class="fchip" data-dow="2" type="button">화</button>
+            <button class="fchip" data-dow="3" type="button">수</button>
+            <button class="fchip" data-dow="4" type="button">목</button>
+            <button class="fchip" data-dow="5" type="button">금</button>
+            <button class="fchip" data-dow="6" type="button">토</button>
+          </div>
+        </div>
+        <div class="hint hidden" id="pfRepeatHint"></div>
+      </div>
       <label class="flabel" for="pfPlace">장소</label>
       <input class="inp" type="text" id="pfPlace" placeholder="예: 학교 정문, 학원 앞" maxlength="60">
       <label class="flabel" for="pfNote">메모 (선택)</label>
@@ -392,6 +417,18 @@
       </div>
       <div class="sheet-actions" id="pfExtra"></div>
     </div>
+  </div>
+</div>
+
+<!-- 범위 선택 시트 (이 날짜만 / 전체 반복) -->
+<div class="modal hidden" id="scopeModal" style="z-index:60">
+  <div class="sheet" id="scopeSheet">
+    <div class="sheet-head">
+      <b id="scopeTitle">선택</b>
+      <button class="x" id="scopeClose" type="button" aria-label="닫기">✕</button>
+    </div>
+    <div class="hint" id="scopeMsg" style="display:none"></div>
+    <div class="sheet-actions" id="scopeActions" style="flex-wrap:wrap"></div>
   </div>
 </div>
 
@@ -425,6 +462,15 @@
   function parseISO(s){ var p = String(s||'').split('-').map(Number); return new Date(p[0], (p[1]||1)-1, p[2]||1); }
   function addDays(s,n){ var d = parseISO(s); d.setDate(d.getDate()+n); return iso(d); }
   function dowOf(s){ return parseISO(s).getDay(); }
+  function dayDiff(a,b){ return Math.round((parseISO(b).getTime() - parseISO(a).getTime()) / 86400000); }
+  /* 시작 주(일요일 시작) 기준 주 번호 — 격주(2주마다) 판정 */
+  function weekIndexFromAnchor(anchor, d){
+    var diff = dayDiff(anchor, d);
+    if(diff < 0) return -1;
+    return Math.floor((diff + dowOf(anchor)) / 7);
+  }
+  function clone(o){ var r = {}; Object.keys(o || {}).forEach(function(k){ r[k] = o[k]; }); return r; }
+  function hasKey(o,k){ return !!o && Object.prototype.hasOwnProperty.call(o,k); }
   function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
   function md(s){ var d = parseISO(s); return (d.getMonth()+1)+'/'+d.getDate(); }
   function todaySeoul(){
@@ -445,6 +491,7 @@
     selected: TODAY,
     viewMonth: (function(){ var d = parseISO(TODAY); return new Date(d.getFullYear(), d.getMonth(), 1); })(),
     insts: {},
+    pkInsts: {},
     conn: 'connecting',
     esOpen: 0
   };
@@ -453,7 +500,8 @@
                type:'seongeun', date:'', allDay:false, start:'09:00', end:'18:00', car:'cira',
                status:'requested', repeat:{freq:'none', days:[], day:1}, note:'' };
 
-  var pform = { id:null, date:'', time:'15:30', place:'', note:'', requestedBy:null, acceptedBy:null };
+  var pform = { id:null, mode:'new', baseDate:null, date:'', time:'15:30', place:'', note:'',
+                requestedBy:null, acceptedBy:null, repeat:{ freq:'none', days:[], day:1 } };
 
   /* ================= 데이터 정규화 ================= */
   function normRepeat(s){
@@ -463,6 +511,10 @@
       var days = (r.days && r.days.length) ? r.days.map(Number) : [dowOf(s.date)];
       return { freq:'weekly', days: days };
     }
+    if(r.freq === 'biweekly'){
+      var bdays = (r.days && r.days.length) ? r.days.map(Number) : [dowOf(s.date)];
+      return { freq:'biweekly', days: bdays };
+    }
     if(r.freq === 'monthly'){
       return { freq:'monthly', day: Number(r.day || parseISO(s.date).getDate()) };
     }
@@ -471,6 +523,7 @@
   function repeatText(r){
     if(!r) return '';
     if(r.freq === 'weekly') return '매주 ' + r.days.map(function(d){ return DOW[d]; }).join('·');
+    if(r.freq === 'biweekly') return '2주마다 ' + r.days.map(function(d){ return DOW[d]; }).join('·');
     if(r.freq === 'monthly') return '매월 ' + r.day + '일';
     return '';
   }
@@ -493,10 +546,11 @@
       overridden: false
     };
   }
-  function matchesRepeat(rep, dateStr){
+  function matchesRepeat(rep, dateStr, baseDate){
     if(!rep) return false;
     var dow = dowOf(dateStr);
     if(rep.freq === 'weekly') return rep.days.indexOf(dow) >= 0;
+    if(rep.freq === 'biweekly') return rep.days.indexOf(dow) >= 0 && weekIndexFromAnchor(baseDate, dateStr) % 2 === 0;
     if(rep.freq === 'monthly') return Number(dateStr.slice(8,10)) === Number(rep.day);
     return false;
   }
@@ -515,7 +569,7 @@
       var d = addDays(from, -62);
       var stop = addDays(to, 62);
       while(d <= stop){
-        if(d >= s.date && matchesRepeat(rep, d)){
+        if(d >= s.date && matchesRepeat(rep, d, s.date)){
           var ex = (s.exceptions && s.exceptions[d]) || null;
           if(!ex || !ex.skip){
             var inst = mkInst(s, d, d);
@@ -546,6 +600,85 @@
     var map = {};
     list.forEach(function(i){ (map[i.occDate] = map[i.occDate] || []).push(i); });
     return map;
+  }
+
+  /* ================= 픽업 반복 (전개·인스턴스) ================= */
+  function normPickupRepeat(p){
+    var r = p && p.repeat;
+    if(!r || !r.freq || r.freq === 'none') return null;
+    if(r.freq === 'weekly' || r.freq === 'biweekly'){
+      var days = (r.days && r.days.length)
+        ? r.days.map(Number).filter(function(d){ return d >= 0 && d <= 6; })
+        : [];
+      if(!days.length) days = [dowOf(p.date)];
+      return { freq:r.freq, days: days.sort(function(a,b){ return a-b; }) };
+    }
+    if(r.freq === 'monthly'){
+      return { freq:'monthly', day: Number(r.day || parseISO(p.date).getDate()) };
+    }
+    return null;
+  }
+  function pickupRepeatText(r){
+    if(!r) return '';
+    if(r.freq === 'weekly') return '매주 ' + r.days.map(function(d){ return DOW[d]; }).join('·');
+    if(r.freq === 'biweekly') return '2주마다 ' + r.days.map(function(d){ return DOW[d]; }).join('·');
+    if(r.freq === 'monthly') return '매월 ' + r.day + '일';
+    return '';
+  }
+  function pkMatches(rep, anchor, d){
+    if(rep.freq === 'monthly') return Number(d.slice(8,10)) === Number(rep.day);
+    if(rep.days.indexOf(dowOf(d)) < 0) return false;
+    if(rep.freq === 'weekly') return true;
+    if(rep.freq === 'biweekly') return weekIndexFromAnchor(anchor, d) % 2 === 0;
+    return false;
+  }
+  /* 인스턴스: ex(그 날짜 예외)를 덮어입힌 사본. 반복 픽업의 수락은 회차별 독립 */
+  function mkPickupInst(p, baseDate, occDate, ex){
+    var rep = normPickupRepeat(p);
+    var acc = (ex && hasKey(ex, 'acceptedBy')) ? (ex.acceptedBy || null) : (rep ? null : (p.acceptedBy || null));
+    return {
+      key: p.id + '|' + baseDate,
+      id: p.id, baseDate: baseDate, date: occDate,
+      time: (ex && ex.time) || p.time || '',
+      place: (ex && typeof ex.place === 'string') ? ex.place : (p.place || ''),
+      note: (ex && typeof ex.note === 'string') ? ex.note : (p.note || ''),
+      requestedBy: normWho({ requestedBy: (ex && ex.requestedBy) || p.requestedBy }),
+      acceptedBy: acc,
+      repeat: rep,
+      overridden: !!ex && !ex.skip,
+      moved: false
+    };
+  }
+  function buildPickupInstances(from, to){
+    var res = [];
+    Object.keys(state.pickups).forEach(function(id){
+      var p = state.pickups[id];
+      if(!p || !p.date) return;
+      var rep = normPickupRepeat(p);
+      if(!rep){
+        if(p.date >= from && p.date <= to) res.push(mkPickupInst(p, p.date, p.date, null));
+        return;
+      }
+      var d = addDays(from, -62), stop = addDays(to, 62);
+      while(d <= stop){
+        if(d >= p.date && pkMatches(rep, p.date, d)){
+          var ex = (p.exceptions && p.exceptions[d]) || null;
+          if(!ex || !ex.skip){
+            var inst = mkPickupInst(p, d, d, ex);
+            if(ex && ex.moveTo){ inst.date = ex.moveTo; inst.moved = ex.moveTo !== d; }
+            if(inst.date >= from && inst.date <= to) res.push(inst);
+          }
+        }
+        d = addDays(d, 1);
+      }
+    });
+    res.sort(function(a,b){
+      var t = String(a.time || '').localeCompare(String(b.time || ''));
+      if(t) return t;
+      if(a.id !== b.id) return a.id < b.id ? -1 : 1;
+      return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0);
+    });
+    return res;
   }
 
   function overlap(a,b){
@@ -717,11 +850,8 @@
     var idx = indexByDate(list);
     var hit = conflictMap(list);
     var pkDay = {};
-    Object.keys(state.pickups).forEach(function(k){
-      var p = state.pickups[k];
-      if(p && p.date && p.date >= range.start && p.date <= range.end){
-        pkDay[p.date] = (pkDay[p.date] || 0) + 1;
-      }
+    buildPickupInstances(range.start, range.end).forEach(function(i){
+      pkDay[i.date] = (pkDay[i.date] || 0) + 1;
     });
 
     var html = '';
@@ -799,25 +929,31 @@
          + '</div>';
   }
 
-  function pickupCardHTML(p){
-    var accepted = p.acceptedBy || null;
-    var who = normWho(p);
+  function pickupCardHTML(i){
+    var accepted = i.acceptedBy || null;
+    var who = normWho({ requestedBy: i.requestedBy });
     var cls = 'pcard who-' + WHO_CLASS[who] + (accepted ? ' done' : '');
     var stateTag = accepted
       ? '<span class="p-state accepted">✅ ' + esc(accepted) + ' 수락</span>'
       : '<span class="p-state pending">수락 대기</span>';
-    var btnS = '<button type="button" class="mini ' + (accepted === '성은' ? 'on' : '') + '" data-act="accept" data-id="' + esc(p.id) + '" data-who="성은">'
+    var tags = '';
+    if(i.repeat) tags += '<span class="tag rep">🔁 ' + esc(pickupRepeatText(i.repeat)) + '</span>';
+    if(i.moved) tags += '<span class="tag moved">↔ ' + esc(md(i.baseDate)) + '에서 이동</span>';
+    else if(i.overridden) tags += '<span class="tag moved">이 날짜만 변경</span>';
+    var k = esc(i.key);
+    var btnS = '<button type="button" class="mini ' + (accepted === '성은' ? 'on' : '') + '" data-act="accept" data-key="' + k + '" data-who="성은">'
              + (accepted === '성은' ? '성은 수락중' : '성은 수락') + '</button>';
-    var btnH = '<button type="button" class="mini ' + (accepted === '남편' ? 'on' : '') + '" data-act="accept" data-id="' + esc(p.id) + '" data-who="남편">'
+    var btnH = '<button type="button" class="mini ' + (accepted === '남편' ? 'on' : '') + '" data-act="accept" data-key="' + k + '" data-who="남편">'
              + (accepted === '남편' ? '남편 수락중' : '남편 수락') + '</button>';
-    return '<div class="' + cls + '" data-id="' + esc(p.id) + '">'
-         +   '<div class="p-row1"><span class="p-time">🕘 ' + esc(p.time || '') + '</span>'
+    return '<div class="' + cls + '" data-key="' + k + '" data-id="' + esc(i.id) + '">'
+         +   '<div class="p-row1"><span class="p-time">🕘 ' + esc(i.time || '') + '</span>'
          +     '<span class="p-who who-' + WHO_CLASS[who] + '">' + esc(who) + ' 요청</span>' + stateTag + '</div>'
-         +   '<div class="p-place">📍 ' + esc(p.place || '') + '</div>'
-         +   (p.note ? '<div class="p-note">' + esc(p.note) + '</div>' : '')
+         +   (tags ? '<div class="p-tags">' + tags + '</div>' : '')
+         +   '<div class="p-place">📍 ' + esc(i.place || '') + '</div>'
+         +   (i.note ? '<div class="p-note">' + esc(i.note) + '</div>' : '')
          +   '<div class="sc-act">' + btnS + btnH
-         +     '<button type="button" class="mini" data-act="pedit" data-id="' + esc(p.id) + '">수정</button>'
-         +     '<button type="button" class="mini danger" data-act="pdel" data-id="' + esc(p.id) + '">삭제</button>'
+         +     '<button type="button" class="mini" data-act="pedit" data-key="' + k + '">수정</button>'
+         +     '<button type="button" class="mini danger" data-act="pdel" data-key="' + k + '">삭제</button>'
          +   '</div>'
          + '</div>';
   }
@@ -862,9 +998,9 @@
     }
     $('#conflictArea').innerHTML = area;
 
-    var pickups = Object.keys(state.pickups).map(function(k){ return state.pickups[k]; })
-      .filter(function(p){ return p && p.date === sel; })
-      .sort(function(a,b){ return String(a.time||'').localeCompare(String(b.time||'')); });
+    var pickups = buildPickupInstances(sel, sel).filter(function(i){ return i.date === sel; });
+    state.pkInsts = {};
+    pickups.forEach(function(i){ state.pkInsts[i.key] = i; });
 
     $('#scheduleList').innerHTML = list.length
       ? list.map(function(i){ return scheduleCardHTML(i, hit); }).join('')
@@ -911,8 +1047,32 @@
     form.open = false;
     form.kind = null;
     $('#modal').classList.add('hidden');
+    $('#scopeModal').classList.add('hidden');
     $('#sfConflict').classList.add('hidden');
     document.body.classList.remove('lock');
+  }
+
+  /* ================= 범위 선택 시트 (이 날짜만 / 전체 반복) ================= */
+  var scopeResolve = null;
+  function askScope(title, msg, opts){
+    return new Promise(function(resolve){
+      scopeResolve = resolve;
+      $('#scopeTitle').textContent = title;
+      var m = $('#scopeMsg');
+      if(msg){ m.style.display = ''; m.textContent = msg; } else { m.style.display = 'none'; }
+      $('#scopeActions').innerHTML = opts.map(function(o){
+        return '<button type="button" class="' + o.cls + '" data-val="' + o.val + '">' + o.label + '</button>';
+      }).join('') + '<button type="button" class="btn wide" data-val="cancel">취소</button>';
+      $('#scopeModal').classList.remove('hidden');
+      document.body.classList.add('lock');
+    });
+  }
+  function closeScope(v){
+    $('#scopeModal').classList.add('hidden');
+    if(!form.open) document.body.classList.remove('lock');
+    var r = scopeResolve;
+    scopeResolve = null;
+    if(r) r(v || null);
   }
 
   /* ================= 폼: 일정 ================= */
@@ -942,7 +1102,7 @@
 
     $('#sfRepeatWrap').classList.toggle('hidden', instMode);
     $('#sfRepeat').value = form.repeat.freq;
-    $('#sfWeekWrap').classList.toggle('hidden', form.repeat.freq !== 'weekly');
+    $('#sfWeekWrap').classList.toggle('hidden', form.repeat.freq !== 'weekly' && form.repeat.freq !== 'biweekly');
     $('#sfMonthWrap').classList.toggle('hidden', form.repeat.freq !== 'monthly');
     $$('#sfWeekdays .fchip').forEach(function(b){
       b.classList.toggle('on', form.repeat.days.indexOf(Number(b.dataset.dow)) >= 0);
@@ -1104,9 +1264,9 @@
       status: isCar ? form.status : 'confirmed',
       note: form.note || '',
       repeat: form.repeat.freq === 'none' ? { freq:'none' }
-            : (form.repeat.freq === 'weekly'
-                ? { freq:'weekly', days: (form.repeat.days.length ? form.repeat.days.slice().sort() : [dowOf(form.date)]) }
-                : { freq:'monthly', day: form.repeat.day }),
+            : (form.repeat.freq === 'monthly'
+                ? { freq:'monthly', day: form.repeat.day }
+                : { freq: form.repeat.freq, days: (form.repeat.days.length ? form.repeat.days.slice().sort() : [dowOf(form.date)]) }),
       exceptions: prev.exceptions || null,
       by: state.role,
       createdAt: prev.createdAt || Date.now(),
@@ -1168,25 +1328,86 @@
     });
   }
 
-  function openPickupForm(p){
-    pform.id = p ? p.id : null;
-    pform.date = p ? p.date : state.selected;
-    pform.time = p ? (p.time || '15:30') : '15:30';
-    pform.place = p ? (p.place || '') : '';
-    pform.note = p ? (p.note || '') : '';
-    pform.requestedBy = p ? normWho(p)
-      : (PICKUP_WHO.indexOf(state.role) >= 0 ? state.role : '정민');
-    pform.acceptedBy = p ? (p.acceptedBy || null) : null;
+  function openPickupForm(mode, data){
+    mode = mode || 'new';
+    pform.mode = mode;
+    pform.baseDate = null;
+    if(mode === 'new'){
+      pform.id = null;
+      pform.date = state.selected;
+      pform.time = '15:30';
+      pform.place = '';
+      pform.note = '';
+      pform.requestedBy = PICKUP_WHO.indexOf(state.role) >= 0 ? state.role : '정민';
+      pform.repeat = { freq:'none', days:[dowOf(state.selected)], day: parseISO(state.selected).getDate() };
+      pform.acceptedBy = null;
+    }else if(mode === 'instance'){
+      var i = data;
+      pform.id = i.id;
+      pform.baseDate = i.baseDate;
+      pform.date = i.date;
+      pform.time = i.time || '15:30';
+      pform.place = i.place || '';
+      pform.note = i.note || '';
+      pform.requestedBy = normWho({ requestedBy: i.requestedBy });
+      pform.repeat = { freq:'none', days:[dowOf(i.date)], day: parseISO(i.date).getDate() };
+      pform.acceptedBy = i.acceptedBy || null;
+    }else{
+      var p = data;
+      var rep = normPickupRepeat(p);
+      pform.id = p.id;
+      pform.date = p.date;
+      pform.time = p.time || '15:30';
+      pform.place = p.place || '';
+      pform.note = p.note || '';
+      pform.requestedBy = normWho(p);
+      pform.repeat = rep
+        ? { freq: rep.freq, days: (rep.days ? rep.days.slice() : [dowOf(p.date)]), day: rep.day || parseISO(p.date).getDate() }
+        : { freq:'none', days:[dowOf(p.date)], day: parseISO(p.date).getDate() };
+      pform.acceptedBy = p.acceptedBy || null;
+    }
     syncPickupWho();
-
     $('#pfDate').value = pform.date;
     $('#pfTime').value = pform.time;
     $('#pfPlace').value = pform.place;
     $('#pfNote').value = pform.note;
-    $('#pfSave').textContent = pform.id ? '수정 저장' : '픽업 요청 등록';
-    $('#pfExtra').innerHTML = pform.id ? '<button class="btn danger wide" id="pfDelete" type="button">요청 삭제</button>' : '';
-
+    syncPickupForm();
     showModal('pickup');
+  }
+
+  /* 반복 UI·버튼만 갱신 (입력값은 건드리지 않음) */
+  function syncPickupForm(){
+    var instMode = pform.mode === 'instance';
+    $('#pfRepeatWrap').classList.toggle('hidden', instMode);
+    $('#pfRepeat').value = pform.repeat.freq;
+    var showWeek = !instMode && (pform.repeat.freq === 'weekly' || pform.repeat.freq === 'biweekly');
+    $('#pfWeekWrap').classList.toggle('hidden', !showWeek);
+    $$('#pfWeekdays .fchip').forEach(function(b){
+      b.classList.toggle('on', pform.repeat.days.indexOf(Number(b.dataset.dow)) >= 0);
+    });
+    $('#pfSave').textContent = instMode ? '이 날짜만 저장' : (pform.id ? '수정 저장' : '픽업 요청 등록');
+    var h = $('#pfRepeatHint');
+    if(instMode){
+      h.classList.remove('hidden');
+      h.innerHTML = '🔁 반복 픽업의 <b>' + esc(md(pform.baseDate)) + '</b> 회차만 저장합니다. 날짜를 바꾸면 그 날짜만 옮겨집니다.';
+    }else if(pform.repeat.freq !== 'none'){
+      h.classList.remove('hidden');
+      h.innerHTML = (pform.repeat.freq === 'monthly'
+          ? '🔁 매월 ' + esc(pform.repeat.day) + '일 반복'
+          : '🔁 ' + esc(pickupRepeatText({ freq:pform.repeat.freq, days: pform.repeat.days.slice().sort(function(a,b){ return a-b; }) })))
+        + ' 반복 · 날짜마다 따로 수락·수정할 수 있습니다.';
+    }else{
+      h.classList.add('hidden');
+      h.innerHTML = '';
+    }
+    if(instMode){
+      $('#pfExtra').innerHTML = '<button class="btn wide" id="pfInstDelete" type="button">이 날짜만 삭제</button>';
+    }else if(pform.id){
+      $('#pfExtra').innerHTML = '<button class="btn danger wide" id="pfDelete" type="button">'
+        + (pform.repeat.freq === 'none' ? '요청 삭제' : '반복 전체 삭제') + '</button>';
+    }else{
+      $('#pfExtra').innerHTML = '';
+    }
   }
 
   function savePickup(){
@@ -1196,20 +1417,71 @@
     pform.note = $('#pfNote').value.trim();
     if(!pform.date){ toast('날짜를 선택하세요'); return; }
     if(!pform.place){ toast('장소를 입력하세요'); return; }
+    if(pform.mode === 'instance'){ savePickupInstance(); return; }
+
+    /* 반복 설정 읽기 */
+    pform.repeat.freq = $('#pfRepeat').value;
+    if(pform.repeat.freq === 'monthly'){
+      pform.repeat.day = Number(pform.repeat.day) || parseISO(pform.date).getDate();
+    }
+
+    var id = pform.id || ('p' + Date.now().toString(36) + Math.random().toString(36).slice(2,5));
+    var prev = state.pickups[id] || {};
+    var repeat = null;
+    if(pform.repeat.freq === 'monthly'){
+      repeat = { freq:'monthly', day: pform.repeat.day };
+    }else if(pform.repeat.freq === 'weekly' || pform.repeat.freq === 'biweekly'){
+      var days = pform.repeat.days.slice().sort(function(a,b){ return a-b; });
+      if(!days.length) days = [dowOf(pform.date)];
+      repeat = { freq: pform.repeat.freq, days: days };
+    }
 
     var p = {
-      id: pform.id || ('p' + Date.now().toString(36) + Math.random().toString(36).slice(2,5)),
+      id: id,
       date: pform.date,
       time: pform.time,
       place: pform.place,
       note: pform.note,
       requestedBy: PICKUP_WHO.indexOf(pform.requestedBy) >= 0 ? pform.requestedBy : '정민',
-      acceptedBy: pform.acceptedBy || null,
-      updatedAt: Date.now()
+      acceptedBy: prev.acceptedBy || null,
+      acceptedAt: prev.acceptedAt || null,
+      repeat: repeat,
+      exceptions: repeat ? (prev.exceptions || null) : null,
+      createdBy: prev.createdBy || state.role,
+      createdAt: prev.createdAt || Date.now(),
+      updatedAt: Date.now(),
+      updatedBy: state.role
     };
-    if(!p.createdBy) p.createdBy = state.role;
     putPickup(p).then(function(ok){
-      if(ok){ toast(pform.id ? '수정했습니다' : '픽업 요청을 등록했습니다'); jumpTo(p.date); closeModal(); }
+      if(ok){
+        toast(pform.mode === 'edit'
+          ? '수정했습니다'
+          : (repeat ? pickupRepeatText(normPickupRepeat(p)) + ' 반복 픽업을 등록했습니다' : '픽업 요청을 등록했습니다'));
+        jumpTo(p.date);
+        closeModal();
+      }
+    });
+  }
+
+  /* 반복 픽업의 회차 하나만 수정 (그 날짜 예외로 저장) */
+  function savePickupInstance(){
+    var p = state.pickups[pform.id];
+    if(!p || !pform.baseDate){ toast('원본 반복 픽업을 찾을 수 없습니다'); return; }
+    var ex = clone(p.exceptions || {});
+    var t = clone(ex[pform.baseDate] || {});
+    t.skip = false;
+    t.moveTo = pform.date;
+    t.time = pform.time;
+    t.place = pform.place;
+    t.note = pform.note;
+    t.requestedBy = pform.requestedBy;
+    ex[pform.baseDate] = t;
+    var nx = clone(p);
+    nx.exceptions = ex;
+    nx.updatedAt = Date.now();
+    nx.updatedBy = state.role;
+    putPickup(nx).then(function(ok){
+      if(ok){ toast('이 날짜만 수정했습니다'); jumpTo(pform.date); closeModal(); }
     });
   }
 
@@ -1250,7 +1522,7 @@
   });
 
   $('#addScheduleBtn').addEventListener('click', function(){ openScheduleForm('new'); });
-  $('#addPickupBtn').addEventListener('click', function(){ openPickupForm(null); });
+  $('#addPickupBtn').addEventListener('click', function(){ openPickupForm('new', null); });
 
   /* 일정 카드 액션 */
   $('#scheduleList').addEventListener('click', function(e){
@@ -1300,28 +1572,86 @@
   });
 
   /* 픽업 카드 액션 */
+  function setPickupAcceptance(inst, who){
+    var p = state.pickups[inst.id];
+    if(!p) return;
+    var nextAccepted = (inst.acceptedBy === who) ? null : who;
+    if(!inst.repeat){
+      var next = clone(p);
+      next.acceptedBy = nextAccepted;
+      next.acceptedAt = nextAccepted ? Date.now() : null;
+      next.updatedAt = Date.now();
+      next.updatedBy = state.role;
+      putPickup(next).then(function(ok){
+        if(ok) toast(nextAccepted ? nextAccepted + ' 수락했습니다' : '수락을 취소했습니다');
+      });
+      return;
+    }
+    /* 반복 픽업: 그 날짜 회차만 수락/해제 (다른 날짜는 그대로) */
+    var ex = clone(p.exceptions || {});
+    var t = clone(ex[inst.baseDate] || {});
+    t.acceptedBy = nextAccepted || '';   /* '' = 이 회차는 수락 안 함 */
+    t.acceptedAt = nextAccepted ? Date.now() : '';
+    ex[inst.baseDate] = t;
+    var nx = clone(p);
+    nx.exceptions = ex;
+    nx.updatedAt = Date.now();
+    nx.updatedBy = state.role;
+    putPickup(nx).then(function(ok){
+      if(ok) toast(nextAccepted
+        ? md(inst.date) + ' · ' + nextAccepted + ' 수락했습니다'
+        : md(inst.date) + ' 수락을 취소했습니다');
+    });
+  }
+  function skipPickupInstance(inst){
+    var p = state.pickups[inst.id];
+    if(!p) return;
+    var ex = clone(p.exceptions || {});
+    ex[inst.baseDate] = { skip:true };
+    var nx = clone(p);
+    nx.exceptions = ex;
+    nx.updatedAt = Date.now();
+    nx.updatedBy = state.role;
+    putPickup(nx).then(function(ok){ if(ok) toast(md(inst.date) + ' 회차만 삭제했습니다'); });
+  }
+
   $('#pickupList').addEventListener('click', function(e){
     var b = e.target.closest('button[data-act]');
     if(!b) return;
     var act = b.dataset.act;
-    var id = b.dataset.id;
-    var p = state.pickups[id];
+    var inst = state.pkInsts[b.dataset.key];
+    if(!inst) return;
+    var p = state.pickups[inst.id];
     if(!p) return;
 
     if(act === 'accept'){
-      var who = b.dataset.who;
-      var next = {};
-      Object.keys(p).forEach(function(k){ next[k] = p[k]; });
-      next.acceptedBy = (p.acceptedBy === who) ? null : who;
-      next.acceptedAt = next.acceptedBy ? Date.now() : null;
-      putPickup(next).then(function(ok){
-        if(ok) toast(next.acceptedBy ? next.acceptedBy + ' 수락했습니다' : '수락을 취소했습니다');
-      });
+      setPickupAcceptance(inst, b.dataset.who);
     }else if(act === 'pedit'){
-      openPickupForm(p);
+      if(!inst.repeat){ openPickupForm('edit', p); return; }
+      askScope('반복 픽업 수정', md(inst.date) + ' 회차만 고칠지, 반복 전체를 고칠지 선택하세요.', [
+        { val:'inst', label:'이 날짜만 수정', cls:'btn primary wide' },
+        { val:'base', label:'전체 반복 수정', cls:'btn wide' }
+      ]).then(function(v){
+        if(v === 'inst') openPickupForm('instance', inst);
+        else if(v === 'base') openPickupForm('edit', p);
+      });
     }else if(act === 'pdel'){
-      if(!confirm('픽업 요청을 삭제할까요?')) return;
-      delPickup(id).then(function(ok){ if(ok) toast('삭제했습니다'); });
+      if(!inst.repeat){
+        if(!confirm('픽업 요청을 삭제할까요?')) return;
+        delPickup(inst.id).then(function(ok){ if(ok) toast('삭제했습니다'); });
+        return;
+      }
+      askScope('반복 픽업 삭제', md(inst.date) + ' 회차만 지울지, 반복 전체를 지울지 선택하세요.', [
+        { val:'inst', label:'이 날짜만 삭제', cls:'btn danger wide' },
+        { val:'base', label:'반복 전체 삭제', cls:'btn danger wide' }
+      ]).then(function(v){
+        if(v === 'inst') skipPickupInstance(inst);
+        else if(v === 'base'){
+          if(confirm('반복 픽업 전체를 삭제할까요? (다른 날짜 회차도 모두 사라집니다)')){
+            delPickup(inst.id).then(function(ok){ if(ok) toast('반복 전체를 삭제했습니다'); });
+          }
+        }
+      });
     }
   });
 
@@ -1354,7 +1684,9 @@
   });
   $('#sfRepeat').addEventListener('change', function(){
     form.repeat.freq = this.value;
-    if(form.repeat.freq === 'weekly' && !form.repeat.days.length) form.repeat.days = [dowOf(form.date)];
+    if(form.repeat.freq === 'weekly' || form.repeat.freq === 'biweekly'){
+      if(!form.repeat.days.length) form.repeat.days = [dowOf(form.date)];
+    }
     if(form.repeat.freq === 'monthly') form.repeat.day = parseISO(form.date).getDate();
     syncFormUI();
   });
@@ -1414,13 +1746,52 @@
   });
   $('#pfSave').addEventListener('click', savePickup);
   $('#pfCancel').addEventListener('click', closeModal);
+  $('#pfRepeat').addEventListener('change', function(){
+    pform.repeat.freq = this.value;
+    if(pform.repeat.freq === 'weekly' || pform.repeat.freq === 'biweekly'){
+      if(!pform.repeat.days.length) pform.repeat.days = [dowOf(pform.date)];
+    }
+    if(pform.repeat.freq === 'monthly') pform.repeat.day = parseISO(pform.date).getDate();
+    syncPickupForm();
+  });
+  $('#pfWeekdays').addEventListener('click', function(e){
+    var b = e.target.closest('.fchip');
+    if(!b) return;
+    var d = Number(b.dataset.dow);
+    var i = pform.repeat.days.indexOf(d);
+    if(i >= 0) pform.repeat.days.splice(i,1); else pform.repeat.days.push(d);
+    syncPickupForm();
+  });
+  $('#pfDate').addEventListener('change', function(){
+    pform.date = this.value;
+    if(pform.repeat.freq === 'monthly') pform.repeat.day = parseISO(pform.date).getDate();
+    syncPickupForm();
+  });
   $('#pfExtra').addEventListener('click', function(e){
     var b = e.target.closest('button');
-    if(b && b.id === 'pfDelete'){
-      if(!confirm('픽업 요청을 삭제할까요?')) return;
+    if(!b) return;
+    if(b.id === 'pfDelete'){
+      if(!confirm(pform.repeat.freq === 'none'
+        ? '픽업 요청을 삭제할까요?'
+        : '반복 픽업 전체를 삭제할까요? (모든 날짜 회차가 사라집니다)')) return;
       delPickup(pform.id).then(function(ok){ if(ok){ toast('삭제했습니다'); closeModal(); } });
+    }else if(b.id === 'pfInstDelete'){
+      var inst = state.pkInsts[pform.id + '|' + pform.baseDate];
+      if(!inst) return;
+      if(!confirm(md(inst.date) + ' 회차만 반복 픽업에서 뺄까요?')) return;
+      skipPickupInstance(inst);
+      closeModal();
     }
   });
+
+  /* 범위 선택 시트 */
+  $('#scopeActions').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-val]');
+    if(!b) return;
+    closeScope(b.dataset.val);
+  });
+  $('#scopeClose').addEventListener('click', function(){ closeScope(null); });
+  $('#scopeModal').addEventListener('click', function(e){ if(e.target.id === 'scopeModal') closeScope(null); });
 
   $('#sheetClose').addEventListener('click', closeModal);
   $('#modal').addEventListener('click', function(e){ if(e.target.id === 'modal') closeModal(); });
