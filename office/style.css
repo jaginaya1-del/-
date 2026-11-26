@@ -427,8 +427,9 @@ a { color: inherit; text-decoration: none; }
 
 .msg-task-actions { display: inline-flex; flex: none; gap: 3px; }
 .msg-task-actions .state-btn {
-  padding: 3px 8px;
-  font-size: 10px;
+  padding: 4px 9px;
+  min-height: 24px;
+  font-size: 10.5px;
   border-radius: 8px;
   background: #FFFCF6;
 }
