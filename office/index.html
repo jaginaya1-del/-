@@ -8,7 +8,7 @@
 <meta name="description" content="흥장군 비서실 — 성은님 전용 AI 합동작업실. 회의실·작업실·비서현황·메모.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
-<link rel="stylesheet" href="style.css?v=20261126j">
+<link rel="stylesheet" href="style.css?v=20261127a">
 </head>
 <body>
 
@@ -53,6 +53,12 @@
       </div>
 
       <p class="room-meta" id="roomMeta">🏛️ 대회의실 · ON 3명</p>
+
+      <div class="stat-strip cmd-stats" id="cmdStats" aria-label="지휘실 작업 상태 요약" hidden>
+        <span class="stat stat-pending">대기 <b>0</b></span>
+        <span class="stat stat-running">진행 <b>0</b></span>
+        <span class="stat stat-done">완료 <b>0</b></span>
+      </div>
 
       <div class="msg-scroll" id="msgScroll">
         <div class="msg-list" id="msgList"></div>
@@ -168,6 +174,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20261126j"></script>
+<script src="app.js?v=20261127a"></script>
 </body>
 </html>
