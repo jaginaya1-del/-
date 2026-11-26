@@ -30,6 +30,15 @@
     done:    { label: '완료', cls: 'done' }
   };
 
+  /* 지휘실 멘션 → 담당자 칩 (긴 표기를 먼저 검사) */
+  const MENTIONS = [
+    { keys: ['@임석은비서', '@임석은 비서'], emoji: '💙', name: '임석은 비서' },
+    { keys: ['@하선비서', '@하선 비서'],     emoji: '🌸', name: '하선 비서' },
+    { keys: ['@꼬맹이'],                    emoji: '📱', name: '꼬맹이' },
+    { keys: ['@라망이'],                    emoji: '🔴', name: '라망이' },
+    { keys: ['@all', '@전원'],              emoji: '📣', name: '전원' }
+  ];
+
   const state = {
     data: null,
     lastKey: '',
@@ -354,6 +363,8 @@
     const agents = toList(room().agents || {});
     $('roomMeta').textContent = meta.icon + ' ' + meta.name + ' · ON ' + (agents.length + 1) + '명';
 
+    renderCommandStats(items);
+
     const box = $('msgScroll');
     const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
 
@@ -378,8 +389,11 @@
       const time = m.timeStr || (m.ts ? fmtTime(new Date(m.ts)) : '');
       const text = String(m.text == null ? '' : m.text);
       const pics = bubbleImgs(messageImages(m));
+      const tStatus = msgTaskStatus(m, state.channel);
+      const taskRow = tStatus ? msgTaskRow(m, tStatus) : '';
       return divider + '' +
-        '<article class="msg' + (who.own ? ' is-own' : '') + (grouped ? ' is-grouped' : '') + '">' +
+        '<article class="msg' + (who.own ? ' is-own' : '') + (grouped ? ' is-grouped' : '') +
+          (tStatus === 'done' ? ' is-task-done' : '') + '">' +
           (grouped
             ? '<span class="msg-avatar" aria-hidden="true" style="background:transparent;border-color:transparent;box-shadow:none"></span>'
             : '<span class="msg-avatar" aria-hidden="true">' + esc(who.emoji) + '</span>') +
@@ -391,11 +405,58 @@
             (text.trim() ? '<p class="bubble">' + linkify(text) + '</p>' : '') +
             pics +
             ytEmbeds(text) +
+            taskRow +
           '</div>' +
         '</article>';
     }).join('');
 
     if (nearBottom) requestAnimationFrame(() => scrollBottom(false));
+  }
+
+  /* 지휘실에서만 쓰는 작업 상태 */
+
+  function msgTaskStatus(m, channel) {
+    if (!m) return null;
+    if (m.taskStatus && STATUS[m.taskStatus]) return m.taskStatus;
+    // 예전에 쌓인 성은 님 지시에도 상태 배지가 보이도록 기본값 대기
+    if (channel === 'command' && m.sender === '성은') return 'pending';
+    return null;
+  }
+
+  function mentionChips(text) {
+    const src = String(text == null ? '' : text);
+    return MENTIONS.filter((it) => it.keys.some((k) => src.indexOf(k) !== -1))
+      .map((it) => '<span class="who-chip">' + it.emoji + ' ' + esc(it.name) + '</span>')
+      .join('');
+  }
+
+  function msgTaskRow(m, st) {
+    const info = STATUS[st];
+    return '<div class="msg-task">' +
+      '<span class="badge badge-' + info.cls + '">' + info.label + '</span>' +
+      mentionChips(m.text) +
+      '<span class="msg-task-actions" data-msg="' + esc(m.id) + '">' +
+        stateBtn(st, 'pending', '대기') +
+        stateBtn(st, 'running', '진행') +
+        stateBtn(st, 'done', '완료') +
+      '</span>' +
+    '</div>';
+  }
+
+  function renderCommandStats(items) {
+    const strip = $('cmdStats');
+    if (!strip) return;
+    if (state.channel !== 'command') { strip.hidden = true; return; }
+    const counts = { pending: 0, running: 0, done: 0 };
+    items.forEach((m) => {
+      const st = msgTaskStatus(m, 'command');
+      if (st) counts[st] += 1;
+    });
+    strip.innerHTML =
+      '<span class="stat stat-pending">대기 <b>' + counts.pending + '</b></span>' +
+      '<span class="stat stat-running">진행 <b>' + counts.running + '</b></span>' +
+      '<span class="stat stat-done">완료 <b>' + counts.done + '</b></span>';
+    strip.hidden = false;
   }
 
   function renderTasks() {
@@ -601,6 +662,8 @@
       timeStr: fmtTime(now)
     };
     if (photos.length) payload.images = photos;
+    // 지휘실의 지시는 기본으로 '대기' 상태로 접수
+    if (state.channel === 'command' && state.sender === '성은') payload.taskStatus = 'pending';
 
     try {
       await write('messages/' + state.channel, 'POST', payload);
@@ -639,12 +702,33 @@
     }
   });
 
-  /* 사진 크게 보기 */
-  $('msgList').addEventListener('click', (e) => {
+  /* 사진 크게 보기 + 지휘실 상태 변경 */
+  $('msgList').addEventListener('click', async (e) => {
+    const sbtn = e.target.closest('.msg-task-actions .state-btn');
+    if (sbtn) { await setMessageTask(sbtn); return; }
     const btn = e.target.closest('.bubble-img');
     if (!btn) return;
     openLightbox(btn.dataset.full);
   });
+
+  async function setMessageTask(btn) {
+    if (btn.disabled) return;
+    const wrap = btn.closest('[data-msg]');
+    if (!wrap) return;
+    const id = wrap.dataset.msg;
+    const next = btn.dataset.set;
+    if (!id || !STATUS[next]) return;
+
+    wrap.querySelectorAll('.state-btn').forEach((b) => { b.disabled = true; });
+    try {
+      await write('messages/command/' + id, 'PATCH', { taskStatus: next });
+      await pull(true);
+      toast('상태를 「' + STATUS[next].label + '」로 바꿨어요');
+    } catch (err) {
+      toast('변경 실패 — 연결을 확인해 주세요');
+      await pull(true);
+    }
+  }
   $('lightbox').addEventListener('click', (e) => {
     if (e.target.closest('.lb-img')) return;   // 사진 자체 클릭은 그대로
     closeLightbox();
