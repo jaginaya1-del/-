@@ -94,6 +94,12 @@ def main() -> None:
     about = ctx.eval("document.getElementById('about').innerHTML")
 
     data = json.loads((BASE / "data.json").read_text(encoding="utf-8"))
+    items = data["items"]
+    site = data["site"]
+    cp = [it for it in items if it["mall"] == "coupang"]
+    ts = [it for it in items if it["mall"] == "toss"]
+    with_deadline = [it for it in items if it.get("deadline")]
+    with_option = [it for it in items if it.get("optionNote")]
     html = (BASE / "index.html").read_text(encoding="utf-8")
     checks = []
 
@@ -101,40 +107,46 @@ def main() -> None:
         checks.append((name, ok, detail))
 
     check("grid 렌더됨", len(grid) > 2000, f"{len(grid):,} chars")
-    check("카드 10개", grid.count('<article class="card"') == 10, str(grid.count('<article class="card"')))
-    check("쿠팡 카드 5개", grid.count('data-mall="coupang"') == 5)
-    check("토스 카드 5개", grid.count('data-mall="toss"') == 5)
-    check("회차 뱃지 표시", grid.count(data["site"]["roundLabel"]) == 10, str(grid.count(data["site"]["roundLabel"])))
-    check("마감 뱃지 5개(내일 07:00)", grid.count('class="deadline"') == 5, str(grid.count('class="deadline"')))
+    check(f"카드 {len(items)}개", grid.count('<article class="card"') == len(items), str(grid.count('<article class="card"')))
+    check(f"쿠팡 카드 {len(cp)}개", grid.count('data-mall="coupang"') == len(cp), str(grid.count('data-mall="coupang"')))
+    check(f"토스 카드 {len(ts)}개", grid.count('data-mall="toss"') == len(ts), str(grid.count('data-mall="toss"')))
+    check("회차 뱃지 표시", grid.count(site["roundLabel"]) == len(items), str(grid.count(site["roundLabel"])))
+    check(f"마감 뱃지 {len(with_deadline)}개", grid.count('class="deadline"') == len(with_deadline), str(grid.count('class="deadline"')))
     check("마감 지난 뱃지 없음", grid.count('class="deadline passed"') == 0, str(grid.count('class="deadline passed"')))
-    check("쿠팡 파트너스 링크 10개(카드+버튼)", grid.count("link.coupang.com") == 10, f"{grid.count('link.coupang.com')}회")
-    check("토스 쉐어링크 10개(카드+버튼)", grid.count("toss.shopping/_m/") == 10, f"{grid.count('toss.shopping/_m/')}회")
-    check("토스 링크 버튼 5개", grid.count("토스쇼핑 보러가기") == 5, str(grid.count("토스쇼핑 보러가기")))
+    check("쿠팡 파트너스 링크(카드+버튼)", grid.count("link.coupang.com") == len(cp) * 2, f"{grid.count('link.coupang.com')}회")
+    check("토스 쉐어링크(카드+버튼)", grid.count("toss.shopping/_m/") == len(ts) * 2, f"{grid.count('toss.shopping/_m/')}회")
+    check(f"토스 링크 버튼 {len(ts)}개", grid.count("토스쇼핑 보러가기") == len(ts), str(grid.count("토스쇼핑 보러가기")))
     check("토스 복사 버튼 없음", grid.count("data-copy=") == 0, str(grid.count("data-copy=")))
-    check("쿠팡 이미지 5개", grid.count("thumbnail.coupangcdn.com") == 5, str(grid.count("thumbnail.coupangcdn.com")))
-    check("토스 이미지 5개(로컬)", grid.count('src="img/ts-') == 5, str(grid.count('src="img/ts-')))
-    check("가격 표기", "17,070원" in grid and "14,980원" in grid)
-    check("할인율 표기", "62%" in grid and "81%" in grid)
-    check("정가 취소선", "46,000원" in grid)
-    check("옵션 안내 5개", grid.count('class="option-note"') == 5, str(grid.count('class="option-note"')))
-    check("roundBar 채워짐", data["site"]["roundLabel"] in roundbar)
-    check("roundSub 노출", "쿠팡 5선 + 토스 5선" in roundbar)
-    check("수수료 고지 — 상단 요소에 data.json 문구", notice == data["site"]["partnersNotice"], notice[:40])
+    check(f"쿠팡 이미지 {len(cp)}개(로컬)", grid.count('src="img/cp-') == len(cp), str(grid.count('src="img/cp-')))
+    check(f"토스 이미지 {len(ts)}개(로컬)", grid.count('src="img/ts-') == len(ts), str(grid.count('src="img/ts-')))
+    check("가격 표기", "11,930원" in grid and "12,700원" in grid)
+    check("할인율 표기", "47%" in grid and "77%" in grid)
+    check("정가 취소선", "22,900원" in grid)
+    check(f"옵션 안내 {len(with_option)}개", grid.count('class="option-note"') == len(with_option), str(grid.count('class="option-note"')))
+    check("roundBar 채워짐", site["roundLabel"] in roundbar)
+    check("roundSub 노출", "쿠팡 7선 + 토스 5선" in roundbar)
+    check("수수료 고지 — 상단 요소에 data.json 문구", notice == site["partnersNotice"], notice[:40])
     check("상단 고지가 헤더보다 앞(첫 화면 맨 위)",
           html.index("<body>") < html.index('class="top-notice"') < html.index('<header class="hero"'))
-    check("index.html 정적 문구 = data.json 문구", data["site"]["partnersNotice"] in html)
+    check("index.html 정적 문구 = data.json 문구", site["partnersNotice"] in html)
     check("푸터에 수수료 고지 중복 없음",
           "쿠팡 파트너스" not in legal, "legal 에 남아 있음" if "쿠팡 파트너스" in legal else "")
     check("탭 3개", tabs.count("data-filter=") == 3, str(tabs.count("data-filter=")))
-    check("탭 카운트(전체 10)", ">10<" in tabs or "10</span>" in tabs)
+    check(f"탭 카운트(전체 {len(items)})", f">{len(items)}</span>" in tabs, tabs[tabs.find("count"):][:60])
     check("about 채워짐", "라망도르" in about)
     check("about 토스 쉐어링크 안내", "토스쇼핑 쉐어링크" in about)
 
     # 실제 상품명이 모두 들어갔는지
-    for it in data["items"]:
+    for it in items:
         name = it["title"].replace("&", "&amp;").replace("<", "&lt;")
         if name not in grid:
             check("상품명: " + it["title"][:20], False, "not found")
+
+    # 이미지 파일이 실제로 있는지 (로드 실패·플레이스홀더 방지)
+    for it in items:
+        img = it.get("image") or ""
+        exists = bool(img) and (BASE / img).is_file()
+        check("이미지 파일: " + img, exists, "" if exists else "missing")
 
     bad = [c for c in checks if not c[1]]
     for name, ok, detail in checks:
