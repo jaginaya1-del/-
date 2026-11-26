@@ -6,7 +6,7 @@
 set -euo pipefail
 
 FILES="index.html style.css app.js data.js data.json .nojekyll"
-DIRS="img office"
+DIRS="img office family-car-scheduler"
 REMOTE="${1:-$(git remote get-url origin)}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
