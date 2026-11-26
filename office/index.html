@@ -8,7 +8,7 @@
 <meta name="description" content="흥장군 비서실 — 성은님 전용 AI 합동작업실. 회의실·작업실·비서현황·메모.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
-<link rel="stylesheet" href="style.css?v=20261126h">
+<link rel="stylesheet" href="style.css?v=20261126i">
 </head>
 <body>
 
@@ -73,7 +73,10 @@
           <button type="button" class="chip chip-mention" data-mention="@임석은비서 ">@임석은비서</button>
           <button type="button" class="chip chip-mention" data-mention="@하선비서 ">@하선비서</button>
         </div>
+        <div class="photo-tray" id="photoTray" aria-label="첨부한 사진" hidden></div>
         <div class="input-row">
+          <button type="button" class="photo-btn" id="photoBtn" aria-label="사진 첨부" title="사진 첨부 (최대 4장)">📷</button>
+          <input type="file" id="photoInput" accept="image/*" multiple hidden>
           <input id="msgInput" type="text" autocomplete="off" enterkeyhint="send"
                  placeholder="대장님, 지시를 한 줄로 (@all, @라망이, @꼬맹이, @임석은비서, @하선비서)" aria-label="메시지 입력">
           <button type="button" class="send-btn" id="sendBtn">보내기</button>
@@ -158,8 +161,13 @@
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="사진 크게 보기">
+    <button type="button" class="lb-close" id="lightboxClose" aria-label="닫기">✕</button>
+    <img class="lb-img" id="lightboxImg" alt="첨부 사진 크게 보기">
+  </div>
 </div>
 
-<script src="app.js?v=20261126h"></script>
+<script src="app.js?v=20261126i"></script>
 </body>
 </html>
