@@ -119,7 +119,7 @@
 
   /* ---------------- 사진 ---------------- */
 
-  const MAX_PHOTOS = 4;
+  const MAX_PHOTOS = 10;
   const MAX_SIDE = 960;
   const JPEG_QUALITY = 0.78;
 
