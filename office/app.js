@@ -15,13 +15,60 @@
     lounge:  { icon: '☕', name: '라운지',   hint: '잠깐 쉬어 가는 방' }
   };
 
-  const SENDERS = {
-    '성은':      { emoji: '👑', role: '대장님', own: true },
-    '라망이':    { emoji: '🔴', role: '팀장',   own: false },
-    '꼬맹이':    { emoji: '📱', role: '대리',   own: false },
-    '임석은 비서': { emoji: '💙', role: '사원',   own: false },
-    '하선 비서': { emoji: '🌸', role: '사원',   own: false },
-    '서브비서':  { emoji: '📱', role: '대리',   own: false }  // 옛 데이터 호환
+  /* 사람 명부 — 굵은 이름에 직함이 들어 있으므로 별도 직함 라벨은 겹칠 때만 생략 */
+  const PEOPLE = [
+    { name: '성은',      emoji: '👑', title: '대장님', own: true,  rank: 0,
+      aliases: ['성은님', '대장님'] },
+    { name: '라망이 팀장', emoji: '🔴', title: '팀장',   own: false, rank: 1,
+      aliases: ['라망이', '라망이팀장', '메인 비서', '메인비서'] },
+    { name: '꼬맹이 대리', emoji: '📱', title: '대리',   own: false, rank: 2,
+      aliases: ['꼬맹이', '꼬맹이대리', '서브비서', '서브 비서'] },
+    { name: '임석은 사원', emoji: '💙', title: '사원',   own: false, rank: 3,
+      aliases: ['임석은 비서', '임석은비서', '임석은', '협력 비서', '협력비서'] },
+    { name: '하선 사원', emoji: '🌸', title: '사원',   own: false, rank: 4,
+      aliases: ['하선 비서', '하선비서', '하선', '막내딸 비서', '막내딸비서'] }
+  ];
+
+  const SENDERS = {};   // 새 이름 → 표시 정보
+  const ALIAS = {};     // 과거·외부 이름 → 새 이름
+  const PERSON = {};    // 새 이름 → 표시 정보 (SENDERS 와 동일)
+
+  PEOPLE.forEach(function (p) {
+    const info = { emoji: p.emoji, role: p.title, name: p.name, rank: p.rank, own: !!p.own };
+    SENDERS[p.name] = info;
+    PERSON[p.name] = info;
+    ALIAS[p.name] = p.name;
+    p.aliases.forEach(function (a) { ALIAS[a] = p.name; });
+    ALIAS[p.name.replace(/\s+/g, '')] = p.name;
+  });
+
+  /* DB에 남은 옛 이름(- 비서, 서브비서 등)을 새 이름으로 통일 */
+  function personName(raw) {
+    const s = String(raw == null ? '' : raw).trim();
+    if (!s) return '';
+    if (ALIAS[s]) return ALIAS[s];
+    const flat = s.replace(/\s+/g, '');
+    if (ALIAS[flat]) return ALIAS[flat];
+    for (let i = 0; i < PEOPLE.length; i++) {
+      const p = PEOPLE[i];
+      if (flat === p.name.replace(/\s+/g, '')) return p.name;
+      for (let j = 0; j < p.aliases.length; j++) {
+        if (flat === p.aliases[j].replace(/\s+/g, '')) return p.name;
+      }
+    }
+    return s;
+  }
+
+  function personNameRank(name) {
+    return PERSON[name] ? PERSON[name].rank : 99;
+  }
+
+  /* 비서현황은 DB 키로도 사람을 알아본다(lamang/sub/husband/haseon) */
+  const AGENT_KEYS = {
+    lamang:  '라망이 팀장',
+    sub:     '꼬맹이 대리',
+    husband: '임석은 사원',
+    haseon:  '하선 사원'
   };
 
   const STATUS = {
@@ -30,13 +77,13 @@
     done:    { label: '완료', cls: 'done' }
   };
 
-  /* 지휘실 멘션 → 담당자 칩 (긴 표기를 먼저 검사) */
+  /* 지휘실 멘션 → 담당자 칩 (새 이름·옛 이름 모두 인식, 긴 표기를 먼저 검사) */
   const MENTIONS = [
-    { keys: ['@임석은비서', '@임석은 비서'], emoji: '💙', name: '임석은 비서' },
-    { keys: ['@하선비서', '@하선 비서'],     emoji: '🌸', name: '하선 비서' },
-    { keys: ['@꼬맹이'],                    emoji: '📱', name: '꼬맹이' },
-    { keys: ['@라망이'],                    emoji: '🔴', name: '라망이' },
-    { keys: ['@all', '@전원'],              emoji: '📣', name: '전원' }
+    { keys: ['@임석은사원', '@임석은 사원', '@임석은비서', '@임석은 비서', '@임석은'], emoji: '💙', name: '임석은 사원' },
+    { keys: ['@하선사원', '@하선 사원', '@하선비서', '@하선 비서', '@하선'],           emoji: '🌸', name: '하선 사원' },
+    { keys: ['@꼬맹이대리', '@꼬맹이 대리', '@꼬맹이', '@서브비서'],                     emoji: '📱', name: '꼬맹이 대리' },
+    { keys: ['@라망이팀장', '@라망이 팀장', '@라망이'],                                 emoji: '🔴', name: '라망이 팀장' },
+    { keys: ['@all', '@전원'],                                                          emoji: '📣', name: '전원' }
   ];
 
   const state = {
@@ -377,15 +424,18 @@
     let prev = null;
     let prevDay = '';
     list.innerHTML = items.map((m) => {
-      const who = SENDERS[m.sender] || { emoji: '💬', role: m.role || '', own: false };
+      const name = personName(m.sender) || m.sender;
+      const who = PERSON[name] || { emoji: '💬', role: m.role || '', own: false };
+      /* 이름에 이미 직함이 들어 있으면(라망이 팀장) 별도 직함 라벨은 생략 */
+      const roleLabel = (who.role && name.indexOf(who.role) === -1) ? who.role : '';
       const day = m.ts ? dayKey(new Date(m.ts)) : '';
       const divider = day && day !== prevDay
         ? '<div class="day-divider"><span>' + esc(dayLabel(new Date(m.ts))) + '</span></div>'
         : '';
       prevDay = day || prevDay;
-      const grouped = !divider && prev && prev.sender === m.sender &&
-        Math.abs((m.ts || 0) - (prev.ts || 0)) < 5 * 60 * 1000;
-      prev = m;
+      const grouped = !divider && prev && prev.name === name &&
+        Math.abs((m.ts || 0) - prev.ts) < 5 * 60 * 1000;
+      prev = { name: name, ts: m.ts || 0 };
       const time = m.timeStr || (m.ts ? fmtTime(new Date(m.ts)) : '');
       const text = String(m.text == null ? '' : m.text);
       const pics = bubbleImgs(messageImages(m));
@@ -399,8 +449,8 @@
             : '<span class="msg-avatar" aria-hidden="true">' + esc(who.emoji) + '</span>') +
           '<div class="msg-body">' +
             (grouped ? '' :
-              '<div class="msg-meta"><span class="msg-name">' + esc(m.sender) + '</span>' +
-              '<span class="msg-role">' + esc(SENDERS[m.sender] ? who.role : (m.role || '')) + '</span>' +
+              '<div class="msg-meta"><span class="msg-name">' + esc(name) + '</span>' +
+              (roleLabel ? '<span class="msg-role">' + esc(roleLabel) + '</span>' : '') +
               '<span>' + esc(time) + '</span></div>') +
             (text.trim() ? '<p class="bubble">' + linkify(text) + '</p>' : '') +
             pics +
@@ -485,7 +535,7 @@
         '<article class="task-card st-' + st.cls + '">' +
           '<div class="task-top">' +
             '<span class="badge badge-' + st.cls + '">' + st.label + '</span>' +
-            '<span class="badge badge-who">👤 ' + esc(t.assignee || '공동') + '</span>' +
+            '<span class="badge badge-who">👤 ' + esc(personName(t.assignee) || '공동') + '</span>' +
           '</div>' +
           '<h3 class="task-title">' + esc(t.title) + '</h3>' +
           (t.result ? '<p class="task-result">' + linkify(t.result) + '</p>' : '') +
@@ -508,7 +558,13 @@
   }
 
   function renderAgents() {
-    const agents = toList(room().agents || {});
+    const agents = toList(room().agents || {}).map((a) => {
+      const pname = AGENT_KEYS[a.id] || personName(a.name) || a.name || '비서';
+      return Object.assign({}, a, { pname: pname, rank: personNameRank(pname) });
+    });
+    /* 팀장 → 대리 → 사원 순서로 고정 */
+    agents.sort((a, b) => (a.rank - b.rank) || String(a.pname).localeCompare(String(b.pname), 'ko'));
+
     const tasks = toList(room().tasks || {});
     const list = $('agentList');
 
@@ -524,14 +580,22 @@
     allMsgs.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
     list.innerHTML = agents.map((a) => {
-      const mine = allMsgs.filter((m) => m.sender === a.name).slice(0, 2);
-      const assigned = tasks.filter((t) => t.assignee === a.name || t.assignee === '공동');
+      const pname = a.pname;
+      /* 옛 이름과 새 이름으로 쌓인 말·지시를 같은 사람으로 묶는다 */
+      const mine = allMsgs.filter((m) => personName(m.sender) === pname);
+      const assigned = tasks.filter((t) => {
+        const who = personName(t.assignee) || '공동';
+        return who === pname || who === '공동';
+      });
       const done = assigned.filter((t) => t.status === 'done').length;
       const st = a.status === 'online' ? 'online' : (a.status === 'waiting' ? 'waiting' : 'waiting');
       const stLabel = a.status === 'online' ? '활동 중' : (a.status === 'waiting' ? '합류 대기' : '오프라인');
+      /* 이름에 이미 직함이 들어 있으면 별도 직함 줄 생략 */
+      const roleLabel = (a.role && pname.indexOf(a.role) === -1) ? a.role : '';
+      const emoji = a.emoji || (PERSON[pname] ? PERSON[pname].emoji : '🤖');
 
       const logs = mine.length
-        ? '<ul class="agent-log">' + mine.map((m) => {
+        ? '<ul class="agent-log">' + mine.slice(0, 2).map((m) => {
             const r = ROOMS[m.channel] || ROOMS.main;
             return '<li><span class="log-room">' + r.icon + ' ' + r.name + '</span>' +
               '<span class="log-text">' + esc(String(m.text || '').trim() || '📷 사진') + '</span></li>';
@@ -541,16 +605,16 @@
       return '' +
         '<article class="agent-card">' +
           '<div class="agent-head">' +
-            '<span class="agent-emoji" aria-hidden="true">' + esc(a.emoji || '🤖') + '</span>' +
+            '<span class="agent-emoji" aria-hidden="true">' + esc(emoji) + '</span>' +
             '<div class="agent-id">' +
-              '<h3 class="agent-name">' + esc(a.name || '비서') + '</h3>' +
-              '<p class="agent-role">' + esc(a.role || '') + '</p>' +
+              '<h3 class="agent-name">' + esc(pname) + '</h3>' +
+              (roleLabel ? '<p class="agent-role">' + esc(roleLabel) + '</p>' : '') +
             '</div>' +
             '<span class="agent-status ' + st + '"><span class="live-dot"></span>' + stLabel + '</span>' +
           '</div>' +
           '<div class="agent-stat"><span>맡은 일 <b>' + assigned.length + '</b></span>' +
             '<span>완료 <b>' + done + '</b></span>' +
-            '<span>남긴 말 <b>' + allMsgs.filter((m) => m.sender === a.name).length + '</b></span></div>' +
+            '<span>남긴 말 <b>' + mine.length + '</b></span></div>' +
           logs +
           (a.lastSeen ? '<p class="agent-seen">마지막 확인 ' + esc(a.lastSeen) + '</p>' : '') +
         '</article>';
@@ -616,7 +680,7 @@
     });
     const input = $('msgInput');
     input.placeholder = sender === '성은'
-      ? '대장님, 지시를 한 줄로 (@all, @라망이, @꼬맹이, @임석은비서, @하선비서)'
+      ? '대장님, 지시를 한 줄로 (@all, @라망이팀장, @꼬맹이대리, @임석은사원, @하선사원)'
       : sender + ' 이름으로 말해 보기 (테스트)';
   }
 
