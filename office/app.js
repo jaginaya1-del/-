@@ -51,6 +51,69 @@
       .replace(/'/g, '&#39;');
   }
 
+  /* 본문 속 URL을 클릭 가능한 링크로 — 먼저 이스케이프한 뒤 안전하게 변환 */
+  const LINK_TAIL = '.,;:!?)]}'; // URL 뒤에 붙는 문장부호는 링크에서 제외
+  const URL_RE = /https?:\/\/[^\s<>"'`]+/g;
+  const YT_RE = /(?:youtube\.com\/(?:watch\?[^\s]*?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/gi;
+
+  const LINK_ENTITIES = ['&quot;', '&#39;', '&gt;', '&lt;']; // 이스케이프된 따옴표·괄호는 링크 밖으로
+
+  function splitTail(raw) {
+    let url = raw;
+    let tail = '';
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (let i = 0; i < LINK_ENTITIES.length; i++) {
+        const ent = LINK_ENTITIES[i];
+        if (url.length > ent.length && url.slice(-ent.length) === ent) {
+          tail = ent + tail;
+          url = url.slice(0, -ent.length);
+          changed = true;
+        }
+      }
+      if (!changed && url.length > 8 && LINK_TAIL.indexOf(url.charAt(url.length - 1)) !== -1) {
+        tail = url.charAt(url.length - 1) + tail;
+        url = url.slice(0, -1);
+        changed = true;
+      }
+    }
+    return { url: url, tail: tail };
+  }
+
+  function linkify(text) {
+    return esc(text).replace(URL_RE, function (match) {
+      const cut = splitTail(match);
+      if (!cut.url) return match;
+      return '<a class="inline-link" href="' + cut.url + '" target="_blank" rel="noopener noreferrer">' +
+        cut.url + '</a>' + cut.tail;
+    });
+  }
+
+  function youtubeIds(text) {
+    const ids = [];
+    const src = String(text == null ? '' : text);
+    let m;
+    YT_RE.lastIndex = 0;
+    while ((m = YT_RE.exec(src)) !== null) {
+      if (ids.indexOf(m[1]) === -1) ids.push(m[1]);
+      if (ids.length >= 3) break;
+    }
+    return ids;
+  }
+
+  function ytEmbedCard(id) {
+    return '<div class="yt-embed">' +
+      '<iframe src="https://www.youtube.com/embed/' + esc(id) + '" title="유튜브 영상" loading="lazy" ' +
+      'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+      'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>' +
+    '</div>';
+  }
+
+  function ytEmbeds(text) {
+    return youtubeIds(text).map(ytEmbedCard).join('');
+  }
+
   function pad(n) { return String(n).padStart(2, '0'); }
 
   function fmtTime(d) {
@@ -192,7 +255,8 @@
               '<div class="msg-meta"><span class="msg-name">' + esc(m.sender) + '</span>' +
               '<span class="msg-role">' + esc(m.role || who.role) + '</span>' +
               '<span>' + esc(time) + '</span></div>') +
-            '<p class="bubble">' + esc(m.text) + '</p>' +
+            '<p class="bubble">' + linkify(m.text) + '</p>' +
+            ytEmbeds(m.text) +
           '</div>' +
         '</article>';
     }).join('');
@@ -229,7 +293,7 @@
             '<span class="badge badge-who">👤 ' + esc(t.assignee || '공동') + '</span>' +
           '</div>' +
           '<h3 class="task-title">' + esc(t.title) + '</h3>' +
-          (t.result ? '<p class="task-result">' + esc(t.result) + '</p>' : '') +
+          (t.result ? '<p class="task-result">' + linkify(t.result) + '</p>' : '') +
           '<div class="task-foot">' +
             '<span class="task-date">' + esc(t.createdAt || '') + '</span>' +
             '<div class="task-actions" data-task="' + esc(t.id) + '">' +
@@ -314,7 +378,7 @@
           '<h3 class="memo-title">' + esc(m.title || '제목 없음') + '</h3>' +
           '<span class="memo-date">' + esc(m.updatedAt || '') + '</span>' +
         '</div>' +
-        (m.content ? '<p class="memo-content">' + esc(m.content) + '</p>' : '') +
+        (m.content ? '<p class="memo-content">' + linkify(m.content) + '</p>' : '') +
         '<p class="memo-author">✍️ ' + esc(m.author || '성은') + '</p>' +
       '</article>').join('');
   }
