@@ -1,0 +1,32 @@
+{
+  "name": "가족 차량·일정",
+  "short_name": "차량일정",
+  "description": "가족 차량 사용 가능 여부와 픽업·외출 일정을 한눈에 보는 스케줄러",
+  "lang": "ko",
+  "id": "/-/family-car-scheduler/",
+  "start_url": "/-/family-car-scheduler/",
+  "scope": "/-/family-car-scheduler/",
+  "display": "standalone",
+  "theme_color": "#1d4ed8",
+  "background_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
