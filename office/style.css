@@ -582,6 +582,7 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns: minmax(0, 1fr);
   max-width: 230px;
 }
+.msg.is-own .bubble-imgs { margin-left: auto; }
 
 .bubble-img {
   display: block;
