@@ -71,6 +71,17 @@
     haseon:  '하선 사원'
   };
 
+  /* AI한도 — 비서현황과 같은 DB 키(lamang/sub/husband/haseon)에 기록한다 */
+  const KEY_BY_NAME = {};
+  Object.keys(AGENT_KEYS).forEach(function (k) { KEY_BY_NAME[AGENT_KEYS[k]] = k; });
+
+  const QUOTA = {
+    ok:    { label: '🟢 여유',      short: '여유',     cls: 'ok' },
+    warn:  { label: '🟡 주의',      short: '주의',     cls: 'warn' },
+    limit: { label: '🔴 한도 임박', short: '한도 임박', cls: 'limit' }
+  };
+  const QUOTA_ORDER = ['ok', 'warn', 'limit'];
+
   const STATUS = {
     pending: { label: '대기', cls: 'pending' },
     running: { label: '진행', cls: 'running' },
@@ -94,7 +105,8 @@
     view: 'chat',
     busy: false,
     online: null,
-    photos: []
+    photos: [],
+    quotaDraft: {}          /* 아직 저장하지 않은 한도 메모 */
   };
 
   /* ---------------- helpers ---------------- */
@@ -387,6 +399,7 @@
     renderChat();
     renderTasks();
     renderAgents();
+    renderQuota();
     renderMemos();
   }
 
@@ -621,6 +634,82 @@
     }).join('');
   }
 
+  /* ---------------- AI한도 ---------------- */
+
+  function quotaTargets() {
+    /* 성은 님 본인은 빼고, PEOPLE 순서(팀장 → 대리 → 사원) 그대로 */
+    return PEOPLE.filter(function (p) { return !p.own && KEY_BY_NAME[p.name]; })
+      .sort(function (a, b) { return a.rank - b.rank; });
+  }
+
+  function renderQuota() {
+    const list = $('quotaList');
+    if (!list) return;
+    /* 메모를 입력하는 중에는 다시 그리지 않는다 (커서·입력 보존) */
+    const act = document.activeElement;
+    if (act && act.closest && act.closest('#quotaList')) return;
+
+    const agents = room().agents || {};
+    list.innerHTML = quotaTargets().map(function (p) {
+      const key = KEY_BY_NAME[p.name];
+      const a = agents[key] || {};
+      const q = QUOTA[a.quotaStatus];
+      const badge = q
+        ? '<span class="quota-badge ' + q.cls + '">' + q.label + '</span>'
+        : '<span class="quota-badge none">미확인</span>';
+      const note = state.quotaDraft[key] != null
+        ? state.quotaDraft[key]
+        : String(a.quotaNote == null ? '' : a.quotaNote);
+
+      return '' +
+        '<article class="quota-card' + (q ? ' q-' + q.cls : '') + '" data-quota="' + esc(key) + '">' +
+          '<div class="quota-head">' +
+            '<span class="quota-emoji" aria-hidden="true">' + esc(p.emoji) + '</span>' +
+            '<div class="quota-id">' +
+              '<h3 class="quota-name">' + esc(p.name) + '</h3>' +
+              (p.name.indexOf(p.title) === -1 ? '<p class="quota-role">' + esc(p.title) + '</p>' : '') +
+            '</div>' +
+            badge +
+          '</div>' +
+          '<div class="quota-modes" role="group" aria-label="' + esc(p.name) + ' AI 한도 상태">' +
+            QUOTA_ORDER.map(function (k) {
+              const on = a.quotaStatus === k;
+              return '<button type="button" class="quota-btn ' + QUOTA[k].cls + (on ? ' is-current' : '') + '"' +
+                ' data-quota-set="' + k + '"' +
+                (on ? ' disabled aria-pressed="true"' : ' aria-pressed="false"') + '>' +
+                QUOTA[k].short + '</button>';
+            }).join('') +
+          '</div>' +
+          '<div class="quota-note-row">' +
+            '<input type="text" class="quota-note" maxlength="80" autocomplete="off" enterkeyhint="done" ' +
+              'placeholder="예: 70% 남음, 아껴 쓰기" aria-label="' + esc(p.name) + ' 한도 메모" ' +
+              'value="' + esc(note) + '">' +
+            '<button type="button" class="quota-save">저장</button>' +
+          '</div>' +
+          '<p class="quota-stamp">' +
+            (a.quotaUpdatedAt ? '🕒 마지막 기록 ' + esc(a.quotaUpdatedAt) : '아직 기록 없음') +
+          '</p>' +
+        '</article>';
+    }).join('');
+  }
+
+  async function saveQuota(key, patch) {
+    if (!key) return false;
+    const act = document.activeElement;
+    if (act && act.closest && act.closest('#quotaList')) act.blur();   /* 저장 뒤 새로 그리기 위해 */
+    try {
+      await write('agents/' + key, 'PATCH',
+        Object.assign({ quotaUpdatedAt: fmtStamp(new Date()) }, patch));
+      delete state.quotaDraft[key];
+      await pull(true);
+      return true;
+    } catch (err) {
+      toast('저장 실패 — 연결을 확인해 주세요');
+      await pull(true);
+      return false;
+    }
+  }
+
   function renderMemos() {
     const memos = toList(room().memos || {})
       .sort((a, b) => String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')));
@@ -656,6 +745,7 @@
       v.classList.toggle('is-active', v.id === 'view-' + view);
     });
     if (view === 'chat') requestAnimationFrame(() => scrollBottom(false));
+    if (view === 'quota') renderQuota();
   }
 
   function switchChannel(channel) {
@@ -843,6 +933,52 @@
       toast('변경 실패 — 연결을 확인해 주세요');
       await pull(true);
     }
+  });
+
+  /* AI한도 — 상태 바꾸기 · 메모 저장 */
+
+  $('quotaList').addEventListener('click', async (e) => {
+    const card = e.target.closest('[data-quota]');
+    if (!card) return;
+    const key = card.dataset.quota;
+
+    const setBtn = e.target.closest('[data-quota-set]');
+    if (setBtn) {
+      if (setBtn.disabled) return;
+      card.querySelectorAll('[data-quota-set]').forEach((b) => { b.disabled = true; });
+      const ok = await saveQuota(key, { quotaStatus: setBtn.dataset.quotaSet });
+      if (ok) toast('「' + QUOTA[setBtn.dataset.quotaSet].short + '」로 기록했어요 ⚡');
+      return;
+    }
+
+    const saveBtn = e.target.closest('.quota-save');
+    if (saveBtn) {
+      const input = card.querySelector('.quota-note');
+      const text = input ? input.value.trim() : '';
+      saveBtn.disabled = true;
+      const ok = await saveQuota(key, { quotaNote: text || null });
+      if (ok) toast(text ? '한도 메모를 저장했어요 ⚡' : '한도 메모를 지웠어요');
+    }
+  });
+
+  $('quotaList').addEventListener('input', (e) => {
+    const input = e.target.closest('.quota-note');
+    if (!input) return;
+    const card = input.closest('[data-quota]');
+    if (card) state.quotaDraft[card.dataset.quota] = input.value;
+  });
+
+  $('quotaList').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || e.isComposing) return;
+    const input = e.target.closest('.quota-note');
+    if (!input) return;
+    e.preventDefault();
+    const card = input.closest('[data-quota]');
+    if (!card) return;
+    const text = input.value.trim();
+    saveQuota(card.dataset.quota, { quotaNote: text || null }).then((ok) => {
+      if (ok) toast(text ? '한도 메모를 저장했어요 ⚡' : '한도 메모를 지웠어요');
+    });
   });
 
   $('memoForm').addEventListener('submit', async (e) => {
