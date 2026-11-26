@@ -292,13 +292,15 @@ a { color: inherit; text-decoration: none; }
 .msg-scroll {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding: 12px 14px 6px;
 }
 
-.msg-list { display: flex; flex-direction: column; gap: 12px; }
+.msg-list { display: flex; flex-direction: column; gap: 12px; margin-top: auto; }
 
 .day-divider {
   display: flex;
