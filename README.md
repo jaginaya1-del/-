@@ -25,7 +25,7 @@ hotdeal-page/
 
 1. `data.json` 을 새 회차 내용으로 저장합니다.
    - `site.roundLabel` (예: `11/25 오후 2시`), `site.roundFull`, `site.updatedAt` 도 함께 바꿔 주세요.
-   - `items` 배열에 상품을 넣습니다. 쿠팡 5개 + 토스 5개, 각 몰 안에서 `rank` 1~5.
+   - `items` 배열에 상품을 넣습니다. 회차마다 달라요(11/26 회차는 쿠팡 7선 + 토스 5선), 각 몰 안에서 `rank` 1부터 차례로.
 2. `python3 sync_data.py` 를 실행합니다. (`data.js` 가 다시 만들어집니다.)
 3. `git add -A && git commit -m "특가 갱신 11/25 오후 2시" && git push` 로 main 에 올린 뒤,
    `./deploy_pages.sh` 를 실행하면 1~2분 뒤 사이트에 반영됩니다. (`deploy_pages.sh` 가 gh-pages 브랜치로 사이트 파일을 복사해 줍니다)
@@ -49,7 +49,7 @@ hotdeal-page/
 | `optionNote` | 링크 기본 옵션과 다른 구성일 때 안내 (없으면 `""`) |
 | `link` | 쿠팡 파트너스 링크 (토스는 넣지 않음) |
 | `url` | 토스쇼핑 쉐어링크 (`https://toss.shopping/_m/...`) — 있으면 카드·버튼이 이 링크로 열림 |
-| `image` | 상품 이미지. 쿠팡은 썸네일 URL, 토스는 `img/ts-*.jpg` 로컬 경로 (없으면 아이콘 타일) |
+| `image` | 상품 이미지. 11/26 회차부터는 쿠팡·토스 모두 `img/cp-*.jpg`·`img/ts-*.jpg` 로컬 경로 (없으면 아이콘 타일) |
 | `imageSource` | (토스) 원본 og:image 주소 — 나중에 이미지를 다시 받을 때 참고 |
 | `icon` | 이미지가 없거나 깨졌을 때 쓰는 이모지 |
 | `tags` | 검색에 걸리는 키워드 |
