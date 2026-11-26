@@ -8,7 +8,7 @@
 <meta name="description" content="흥장군 비서실 — 성은님 전용 AI 합동작업실. 회의실·작업실·비서현황·메모.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
-<link rel="stylesheet" href="style.css?v=20261126d">
+<link rel="stylesheet" href="style.css?v=20261126e">
 </head>
 <body>
 
@@ -63,15 +63,15 @@
           <span class="chip-label">발신</span>
           <button type="button" class="chip is-active" data-sender="성은" aria-pressed="true">👑 성은 (대장님)</button>
           <button type="button" class="chip" data-sender="라망이" aria-pressed="false">🔴 라망이</button>
-          <button type="button" class="chip" data-sender="서브비서" aria-pressed="false">📱 서브비서</button>
+          <button type="button" class="chip" data-sender="꼬맹이" aria-pressed="false">📱 꼬맹이</button>
           <span class="chip-sep" aria-hidden="true"></span>
           <button type="button" class="chip chip-mention" data-mention="@all ">@all</button>
           <button type="button" class="chip chip-mention" data-mention="@라망이 ">@라망이</button>
-          <button type="button" class="chip chip-mention" data-mention="@서브 ">@서브</button>
+          <button type="button" class="chip chip-mention" data-mention="@꼬맹이 ">@꼬맹이</button>
         </div>
         <div class="input-row">
           <input id="msgInput" type="text" autocomplete="off" enterkeyhint="send"
-                 placeholder="대장님, 지시를 한 줄로 (@all, @라망이, @서브)" aria-label="메시지 입력">
+                 placeholder="대장님, 지시를 한 줄로 (@all, @라망이, @꼬맹이)" aria-label="메시지 입력">
           <button type="button" class="send-btn" id="sendBtn">보내기</button>
         </div>
       </div>
@@ -91,12 +91,12 @@
           <form class="card form-card" id="taskForm">
             <h2 class="card-title">✍️ 새 지시 내리기</h2>
             <input id="taskTitle" type="text" maxlength="120" autocomplete="off"
-                   placeholder="예: 서브폰 비서에게 인스타 DM 확인 맡기기" aria-label="지시 내용">
+                   placeholder="예: 꼬맹이에게 인스타 DM 확인 맡기기" aria-label="지시 내용">
             <div class="form-row">
               <select id="taskAssignee" aria-label="담당자">
                 <option value="공동">공동</option>
                 <option value="라망이">라망이</option>
-                <option value="서브비서">서브비서</option>
+                <option value="꼬맹이">꼬맹이</option>
               </select>
               <button type="submit" class="primary-btn">지시 추가</button>
             </div>
@@ -115,7 +115,7 @@
           <div class="agent-list" id="agentList"></div>
           <div class="card guide-card">
             <h2 class="card-title">🫡 합류 안내</h2>
-            <p>서브폰 피클이 <b>@gilseongeun8</b> 친구 연결을 마치면, 이 비서실의 <b>작업실</b>과 <b>회의실</b>을 함께 쓰게 됩니다. 지시는 <b>작업실</b>에 올리고, 진행 상황은 <b>회의실</b>에서 확인하세요.</p>
+            <p>꼬맹이(서브폰 피클)가 <b>@gilseongeun8</b> 친구 연결을 마치면, 이 비서실의 <b>작업실</b>과 <b>회의실</b>을 함께 쓰게 됩니다. 지시는 <b>작업실</b>에 올리고, 진행 상황은 <b>회의실</b>에서 확인하세요.</p>
           </div>
         </div>
       </div>
@@ -154,6 +154,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 
-<script src="app.js?v=20261126d"></script>
+<script src="app.js?v=20261126e"></script>
 </body>
 </html>

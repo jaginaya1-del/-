@@ -18,7 +18,8 @@
   const SENDERS = {
     '성은':      { emoji: '👑', role: '대장님',    own: true },
     '라망이':    { emoji: '🔴', role: '메인 비서', own: false },
-    '서브비서':  { emoji: '📱', role: '서브 비서', own: false }
+    '꼬맹이':    { emoji: '📱', role: '서브 비서', own: false },
+    '서브비서':  { emoji: '📱', role: '서브 비서', own: false }  // 옛 데이터 호환
   };
 
   const STATUS = {
@@ -356,7 +357,7 @@
     });
     const input = $('msgInput');
     input.placeholder = sender === '성은'
-      ? '대장님, 지시를 한 줄로 (@all, @라망이, @서브)'
+      ? '대장님, 지시를 한 줄로 (@all, @라망이, @꼬맹이)'
       : sender + ' 이름으로 말해 보기 (테스트)';
   }
 
