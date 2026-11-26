@@ -16,12 +16,12 @@
   };
 
   const SENDERS = {
-    '성은':      { emoji: '👑', role: '대장님',    own: true },
-    '라망이':    { emoji: '🔴', role: '메인 비서', own: false },
-    '꼬맹이':    { emoji: '📱', role: '서브 비서', own: false },
-    '임석은 비서': { emoji: '💙', role: '협력 비서', own: false },
-    '하선 비서': { emoji: '🌸', role: '막내딸 비서', own: false },
-    '서브비서':  { emoji: '📱', role: '서브 비서', own: false }  // 옛 데이터 호환
+    '성은':      { emoji: '👑', role: '대장님', own: true },
+    '라망이':    { emoji: '🔴', role: '팀장',   own: false },
+    '꼬맹이':    { emoji: '📱', role: '대리',   own: false },
+    '임석은 비서': { emoji: '💙', role: '사원',   own: false },
+    '하선 비서': { emoji: '🌸', role: '사원',   own: false },
+    '서브비서':  { emoji: '📱', role: '대리',   own: false }  // 옛 데이터 호환
   };
 
   const STATUS = {
@@ -400,7 +400,7 @@
           '<div class="msg-body">' +
             (grouped ? '' :
               '<div class="msg-meta"><span class="msg-name">' + esc(m.sender) + '</span>' +
-              '<span class="msg-role">' + esc(m.role || who.role) + '</span>' +
+              '<span class="msg-role">' + esc(SENDERS[m.sender] ? who.role : (m.role || '')) + '</span>' +
               '<span>' + esc(time) + '</span></div>') +
             (text.trim() ? '<p class="bubble">' + linkify(text) + '</p>' : '') +
             pics +
