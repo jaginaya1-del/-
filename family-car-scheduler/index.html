@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d4ed8">
+<title>🚗 가족 차량·일정</title>
+<style>
+  :root{
+    --ink:#1b2333; --muted:#6b7280; --line:#e5e9f2; --bg:#eef2f9; --card:#ffffff;
+    --c-off:#10b981; --c-off-bg:#ecfdf5; --c-off-line:#a7f3d0;
+    --c-late:#7c3aed; --c-late-bg:#f5f3ff; --c-late-line:#ddd6fe;
+    --c-seongeun:#3b82f6; --c-seongeun-bg:#eff6ff; --c-seongeun-line:#bfdbfe;
+    --c-jeongmin:#f59e0b; --c-jeongmin-bg:#fffbeb; --c-jeongmin-line:#fde68a;
+    --warn:#e11d48; --warn-bg:#fff1f2; --ok:#059669;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+    background:linear-gradient(180deg,#e8eefb 0%,#eef2f9 220px,#eef2f9 100%);
+    color:var(--ink); font-size:14px; line-height:1.45; word-break:keep-all;
+    padding-bottom:32px;
+  }
+  body.lock{overflow:hidden;}
+  #app{max-width:440px; margin:0 auto; padding:10px 10px 26px;}
+
+  /* ===== 상단 ===== */
+  .hero{
+    background:linear-gradient(135deg,#1d4ed8,#3b82f6 55%,#60a5fa);
+    color:#fff; border-radius:20px; padding:14px 14px 12px;
+    box-shadow:0 10px 24px rgba(29,78,216,.26);
+  }
+  .hero-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .hero h1{margin:0; font-size:17px; letter-spacing:-.3px; font-weight:800;}
+  .conn{font-size:10.5px; background:rgba(255,255,255,.18); border-radius:999px; padding:3px 8px; white-space:nowrap;}
+  .conn.live{background:rgba(16,185,129,.35);}
+  .conn.poll{background:rgba(245,158,11,.4);}
+  .conn.off{background:rgba(225,29,72,.45);}
+  .role-row{display:flex; align-items:center; gap:8px; margin-top:11px;}
+  .role-label{font-size:11px; opacity:.85; white-space:nowrap;}
+  .chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{
+    border:1px solid rgba(255,255,255,.45); background:rgba(255,255,255,.14); color:#fff;
+    font:inherit; font-size:12.5px; padding:5px 11px; border-radius:999px; cursor:pointer;
+  }
+  .chip.on{background:#fff; color:#1d4ed8; border-color:#fff; font-weight:700;}
+  .legend{display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:10px; font-size:10.5px; opacity:.95;}
+  .lg{display:inline-flex; align-items:center; gap:4px; white-space:nowrap;}
+  .sw{width:9px; height:9px; border-radius:3px; display:inline-block;}
+  .sw.off{background:#34d399;} .sw.late{background:#a78bfa;}
+  .sw.seongeun{background:#93c5fd;} .sw.jeongmin{background:#fbbf24;}
+
+  /* ===== 카드 공통 ===== */
+  .card{background:var(--card); border-radius:var(--radius); padding:12px; margin-top:10px; box-shadow:0 4px 14px rgba(27,35,51,.06);}
+
+  /* ===== 달력 ===== */
+  .cal-head{display:flex; align-items:center; gap:6px; margin-bottom:8px;}
+  .cal-head .month{font-size:15px; font-weight:800; flex:1; text-align:center;}
+  .navbtn{
+    width:32px; height:32px; border-radius:10px; border:1px solid var(--line); background:#f8fafc;
+    font-size:17px; line-height:1; color:#334155; cursor:pointer;
+  }
+  .today{
+    height:32px; padding:0 10px; border-radius:10px; border:1px solid var(--line); background:#f8fafc;
+    font:inherit; font-size:12px; font-weight:700; color:#1d4ed8; cursor:pointer;
+  }
+  .dows{display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:4px;}
+  .dows span{text-align:center; font-size:10.5px; color:var(--muted); font-weight:700;}
+  .dows span:first-child{color:#ef4444;} .dows span:last-child{color:#2563eb;}
+  .grid{display:grid; grid-template-columns:repeat(7,1fr); grid-auto-rows:60px; gap:2px;}
+  .cell{
+    position:relative; border:1px solid transparent; background:#fbfcfe; border-radius:10px;
+    height:100%; overflow:hidden; padding:4px 1px 3px; display:flex; flex-direction:column; align-items:center;
+    justify-content:flex-start; gap:1px; cursor:pointer; font:inherit; color:var(--ink);
+  }
+  .cell .dnum{font-size:12px; font-weight:700; line-height:1.1;}
+  .cell.other{opacity:.35;}
+  .cell.today{background:#eff6ff; border-color:#bfdbfe;}
+  .cell.today .dnum{color:#1d4ed8;}
+  .cell.sel{background:#dbeafe; border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.25) inset;}
+  .cell.sel .dnum{color:#1e40af;}
+  .dots{display:flex; gap:2px; flex-wrap:wrap; justify-content:center; height:7px;}
+  .dot{width:6px; height:6px; border-radius:50%; display:block;}
+  .dot.off{background:var(--c-off);} .dot.late{background:var(--c-late);}
+  .dot.seongeun{background:var(--c-seongeun);} .dot.jeongmin{background:var(--c-jeongmin);}
+  .cellflags{display:flex; flex-direction:column; align-items:center; gap:1px; min-height:12px;}
+  .avail{font-size:7.5px; font-weight:800; color:#047857; background:#d1fae5; border-radius:4px; padding:0 2px; line-height:1.35; letter-spacing:-.3px; white-space:nowrap;}
+  .cwarn{font-size:9px; line-height:1; color:var(--warn);}
+
+  /* ===== 상세 ===== */
+  .detail-head{display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
+  .ddate{font-size:16px; font-weight:800; letter-spacing:-.3px;}
+  .dsub{font-size:11px; color:var(--muted); margin-top:1px;}
+  .dbadges{display:flex; flex-wrap:wrap; gap:5px; margin-top:6px;}
+  .badge{font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:999px;}
+  .badge.avail{background:#d1fae5; color:#047857; font-size:11px; padding:3px 9px;}
+  .badge.conf{background:#fee2e2; color:#b91c1c;}
+  .dact{display:flex; flex-direction:column; gap:6px;}
+  .btn{
+    font:inherit; font-size:12.5px; font-weight:700; padding:8px 11px; border-radius:11px;
+    border:1px solid var(--line); background:#f8fafc; color:#1e293b; cursor:pointer; white-space:nowrap;
+  }
+  .btn.primary{background:#2563eb; border-color:#2563eb; color:#fff; box-shadow:0 4px 10px rgba(37,99,235,.28);}
+  .btn.danger{background:#fff1f2; border-color:#fecdd3; color:#be123c;}
+  .btn.wide{flex:1; padding:11px; font-size:13.5px;}
+  .btn:disabled{opacity:.5;}
+
+  .subhead{margin:14px 0 6px; font-size:12px; font-weight:800; color:#334155;}
+  .list{display:flex; flex-direction:column; gap:8px;}
+  .empty{font-size:12px; color:var(--muted); background:#f8fafc; border:1px dashed var(--line); border-radius:12px; padding:14px 10px; text-align:center;}
+
+  .alert{
+    display:flex; gap:7px; align-items:flex-start; background:var(--warn-bg); border:1.5px solid #fda4af;
+    color:#9f1239; border-radius:12px; padding:9px 10px; font-size:11.5px; font-weight:700; margin-bottom:8px;
+  }
+  .alert .atitle{display:block; font-size:12px; margin-bottom:2px;}
+  .alert .aline{display:block; font-weight:700; color:#be123c;}
+  .alert .aline.sub{font-weight:600; padding-left:9px;}
+
+  /* 일정 카드 */
+  .scard{border:1.5px solid var(--line); border-radius:13px; padding:9px 10px; background:#fff; position:relative; overflow:hidden;}
+  .scard::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px;}
+  .scard.t-off{background:var(--c-off-bg); border-color:var(--c-off-line);} .scard.t-off::before{background:var(--c-off);}
+  .scard.t-late{background:var(--c-late-bg); border-color:var(--c-late-line);} .scard.t-late::before{background:var(--c-late);}
+  .scard.t-seongeun{background:var(--c-seongeun-bg); border-color:var(--c-seongeun-line);} .scard.t-seongeun::before{background:var(--c-seongeun);}
+  .scard.t-jeongmin{background:var(--c-jeongmin-bg); border-color:var(--c-jeongmin-line);} .scard.t-jeongmin::before{background:var(--c-jeongmin);}
+  .scard.requested{border-style:dashed; border-width:2px;}
+  .scard.conflict{box-shadow:0 0 0 2px #fecdd3, 0 2px 8px rgba(225,29,72,.16); border-color:#fb7185;}
+  .sc-row1{display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+  .sc-title{font-size:13px; font-weight:800; letter-spacing:-.2px;}
+  .tags{display:flex; gap:4px; flex-wrap:wrap; margin-left:auto;}
+  .tag{font-size:9.5px; font-weight:800; padding:2px 6px; border-radius:6px; background:#eef2f7; color:#475569; white-space:nowrap;}
+  .tag.car{background:#e0e7ff; color:#3730a3;}
+  .tag.ok{background:#d1fae5; color:#047857;}
+  .tag.req{background:#fff7ed; color:#b45309; border:1px dashed #f59e0b;}
+  .tag.bad{background:#fee2e2; color:#b91c1c;}
+  .tag.moved{background:#ede9fe; color:#5b21b6;}
+  .sc-meta{font-size:11.5px; color:#475569; margin-top:3px; font-weight:600;}
+  .sc-note{font-size:11.5px; color:#334155; margin-top:3px; background:rgba(255,255,255,.7); border-radius:8px; padding:3px 7px;}
+  .sc-act{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px;}
+  .mini{
+    font:inherit; font-size:11px; font-weight:700; padding:5px 8px; border-radius:8px;
+    border:1px solid #cbd5e1; background:#fff; color:#334155; cursor:pointer;
+  }
+  .mini.go{background:#2563eb; border-color:#2563eb; color:#fff;}
+  .mini.on{background:#059669; border-color:#059669; color:#fff;}
+  .mini.danger{color:#be123c; border-color:#fecdd3; background:#fff1f2;}
+
+  /* 픽업 카드 */
+  .pcard{border:1.5px solid #e2e8f0; border-radius:13px; padding:9px 10px; background:#fff;}
+  .pcard.done{background:#f0fdf4; border-color:#bbf7d0;}
+  .p-row1{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:13px; font-weight:800;}
+  .p-time{color:#0f172a;}
+  .p-who{font-size:10px; font-weight:700; color:#64748b; background:#f1f5f9; border-radius:6px; padding:2px 6px;}
+  .p-state{font-size:10px; font-weight:800; border-radius:6px; padding:2px 7px; margin-left:auto;}
+  .p-state.pending{background:#fff7ed; color:#b45309; border:1px dashed #f59e0b;}
+  .p-state.accepted{background:#dcfce7; color:#15803d;}
+  .p-place{font-size:12px; color:#334155; margin-top:3px; font-weight:600;}
+  .p-note{font-size:11.5px; color:#475569; margin-top:2px;}
+
+  /* ===== 모달 ===== */
+  .modal{position:fixed; inset:0; background:rgba(15,23,42,.5); display:flex; align-items:flex-end; justify-content:center; z-index:50; padding:0;}
+  .modal.hidden{display:none;}
+  .sheet{
+    width:100%; max-width:440px; background:#fff; border-radius:22px 22px 0 0; padding:14px 14px 18px;
+    max-height:92vh; overflow-y:auto; box-shadow:0 -10px 40px rgba(15,23,42,.3); animation:up .18s ease-out;
+  }
+  @keyframes up{from{transform:translateY(24px); opacity:.6;} to{transform:none; opacity:1;}}
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .sheet-head b{font-size:15px;}
+  .x{border:0; background:#f1f5f9; width:30px; height:30px; border-radius:50%; font-size:14px; color:#475569; cursor:pointer;}
+  .flabel{display:block; font-size:11.5px; font-weight:800; color:#475569; margin:11px 0 5px;}
+  .inp{
+    width:100%; font:inherit; font-size:16px; padding:9px 10px; border:1.5px solid var(--line);
+    border-radius:11px; background:#fbfcfe; color:var(--ink);
+  }
+  .inp.small{width:70px; display:inline-block;}
+  textarea.inp{font-size:14px; resize:vertical;}
+  .row{display:flex; align-items:center; gap:8px;}
+  .times{gap:6px; align-items:center;}
+  .times .inp{flex:1;}
+  .chk{display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:#334155; padding:6px 0;}
+  .chk input{width:18px; height:18px; accent-color:#2563eb;}
+  .chips.wrap{flex-wrap:wrap;}
+  .fchip{
+    font:inherit; font-size:12.5px; font-weight:700; padding:7px 11px; border-radius:10px;
+    border:1.5px solid var(--line); background:#f8fafc; color:#475569; cursor:pointer;
+  }
+  .fchip.on{color:#fff; border-color:transparent;}
+  .fchip.on.t-off{background:var(--c-off);} .fchip.on.t-late{background:var(--c-late);}
+  .fchip.on.t-seongeun{background:var(--c-seongeun);} .fchip.on.t-jeongmin{background:var(--c-jeongmin);}
+  #sfCars .fchip.on,#sfStatus .fchip.on{background:#2563eb;}
+  .week .fchip{padding:6px 0; width:34px; text-align:center;}
+  .week .fchip.on{background:#2563eb;}
+  .conflict{
+    margin-top:10px; background:var(--warn-bg); border:1.5px solid #fda4af; color:#9f1239;
+    border-radius:11px; padding:8px 10px; font-size:11.5px; font-weight:700; line-height:1.5;
+  }
+  .hint{margin-top:9px; font-size:11px; color:#64748b; background:#f8fafc; border-radius:9px; padding:8px 9px; line-height:1.5;}
+  .hint.err{background:#fff1f2; color:#be123c; font-weight:700;}
+  .sheet-actions{display:flex; gap:8px; margin-top:14px;}
+  .hidden{display:none !important;}
+
+  .toast{
+    position:fixed; left:50%; top:14px; transform:translateX(-50%) translateY(-12px);
+    background:#0f172a; color:#fff; font-size:12.5px; font-weight:700; padding:9px 15px; border-radius:999px;
+    opacity:0; pointer-events:none; transition:.2s; z-index:80; max-width:88vw; text-align:center;
+    box-shadow:0 8px 20px rgba(15,23,42,.25);
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .footer-note{text-align:center; font-size:10px; color:#94a3b8; margin-top:12px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="hero">
+    <div class="hero-row">
+      <h1>🚗 가족 차량·일정</h1>
+      <span id="conn" class="conn">연결 중…</span>
+    </div>
+    <div class="role-row">
+      <span class="role-label">내 역할</span>
+      <div class="chips" id="roleChips">
+        <button class="chip" data-role="성은" type="button">성은</button>
+        <button class="chip" data-role="남편" type="button">남편</button>
+        <button class="chip" data-role="정민" type="button">정민</button>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="lg"><i class="sw off"></i>남편 휴무일</span>
+      <span class="lg"><i class="sw late"></i>남편 외박/미귀가</span>
+      <span class="lg"><i class="sw seongeun"></i>성은 차량 사용</span>
+      <span class="lg"><i class="sw jeongmin"></i>정민 차량 사용</span>
+    </div>
+  </header>
+
+  <section class="card cal">
+    <div class="cal-head">
+      <button class="navbtn" id="prevMonth" type="button" aria-label="이전 달">‹</button>
+      <div class="month" id="monthLabel">—</div>
+      <button class="navbtn" id="nextMonth" type="button" aria-label="다음 달">›</button>
+      <button class="today" id="todayBtn" type="button">오늘</button>
+    </div>
+    <div class="dows"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="card detail">
+    <div class="detail-head">
+      <div>
+        <div class="ddate" id="detailDate">—</div>
+        <div class="dsub" id="detailSub"></div>
+        <div class="dbadges" id="detailBadges"></div>
+      </div>
+      <div class="dact">
+        <button class="btn primary" id="addScheduleBtn" type="button">+ 일정</button>
+        <button class="btn" id="addPickupBtn" type="button">+ 픽업</button>
+      </div>
+    </div>
+    <div id="conflictArea"></div>
+    <div class="list" id="scheduleList"></div>
+    <div class="subhead">🙋 정민 픽업 요청</div>
+    <div class="list" id="pickupList"></div>
+  </section>
+
+  <div class="footer-note">가족 3명 · 차 2대(씨라 · 루핀) · 실시간 공유</div>
+</div>
+
+<!-- ================= 일정/픽업 입력 시트 ================= -->
+<div class="modal hidden" id="modal">
+  <div class="sheet" id="sheet">
+    <div class="sheet-head">
+      <b id="sheetTitle">일정 추가</b>
+      <button class="x" id="sheetClose" type="button" aria-label="닫기">✕</button>
+    </div>
+
+    <!-- 일정 폼 -->
+    <div id="scheduleForm">
+      <label class="flabel">일정 종류</label>
+      <div class="chips wrap" id="sfTypes">
+        <button class="fchip t-off" data-type="off" type="button">남편 휴무일</button>
+        <button class="fchip t-late" data-type="late" type="button">남편 외박/미귀가</button>
+        <button class="fchip t-seongeun" data-type="seongeun" type="button">성은 차량 사용</button>
+        <button class="fchip t-jeongmin" data-type="jeongmin" type="button">정민 차량 사용</button>
+      </div>
+
+      <label class="flabel" for="sfDate">날짜</label>
+      <input class="inp" type="date" id="sfDate">
+
+      <div id="sfTimeWrap">
+        <label class="flabel">시간대</label>
+        <div class="row"><label class="chk"><input type="checkbox" id="sfAllDay"> 종일</label></div>
+        <div class="row times" id="sfTimes">
+          <input class="inp" type="time" id="sfStart">
+          <span>~</span>
+          <input class="inp" type="time" id="sfEnd">
+        </div>
+      </div>
+
+      <div id="sfCarWrap">
+        <label class="flabel">차량</label>
+        <div class="chips" id="sfCars">
+          <button class="fchip" data-car="cira" type="button">🚙 씨라</button>
+          <button class="fchip" data-car="lupin" type="button">🚙 루핀</button>
+        </div>
+      </div>
+
+      <div id="sfStatusWrap">
+        <label class="flabel">상태</label>
+        <div class="chips" id="sfStatus">
+          <button class="fchip" data-status="requested" type="button">요청</button>
+          <button class="fchip" data-status="confirmed" type="button">확정</button>
+        </div>
+      </div>
+
+      <div id="sfRepeatWrap">
+        <label class="flabel" for="sfRepeat">반복</label>
+        <select class="inp" id="sfRepeat">
+          <option value="none">반복 안 함</option>
+          <option value="weekly">매주 (요일 선택)</option>
+          <option value="monthly">매월 (해당 일자)</option>
+        </select>
+        <div id="sfWeekWrap" class="hidden">
+          <label class="flabel">반복 요일</label>
+          <div class="chips week" id="sfWeekdays">
+            <button class="fchip" data-dow="0" type="button">일</button>
+            <button class="fchip" data-dow="1" type="button">월</button>
+            <button class="fchip" data-dow="2" type="button">화</button>
+            <button class="fchip" data-dow="3" type="button">수</button>
+            <button class="fchip" data-dow="4" type="button">목</button>
+            <button class="fchip" data-dow="5" type="button">금</button>
+            <button class="fchip" data-dow="6" type="button">토</button>
+          </div>
+        </div>
+        <div id="sfMonthWrap" class="hidden">
+          <label class="flabel">매월 반복 일자</label>
+          <div class="row"><input class="inp small" type="number" min="1" max="31" id="sfMonthDay"><span>일</span></div>
+        </div>
+      </div>
+
+      <label class="flabel" for="sfNote">메모 (선택)</label>
+      <textarea class="inp" id="sfNote" rows="2" placeholder="예: 병원, 학원 하원, 마트 등"></textarea>
+
+      <div class="conflict hidden" id="sfConflict"></div>
+      <div class="hint hidden" id="sfHint"></div>
+
+      <div class="sheet-actions">
+        <button class="btn primary wide" id="sfSave" type="button">저장</button>
+        <button class="btn wide" id="sfCancel" type="button">취소</button>
+      </div>
+      <div class="sheet-actions" id="sfExtra"></div>
+    </div>
+
+    <!-- 픽업 폼 -->
+    <div id="pickupForm" class="hidden">
+      <label class="flabel" for="pfDate">날짜</label>
+      <input class="inp" type="date" id="pfDate">
+      <label class="flabel" for="pfTime">시간</label>
+      <input class="inp" type="time" id="pfTime">
+      <label class="flabel" for="pfPlace">장소</label>
+      <input class="inp" type="text" id="pfPlace" placeholder="예: 학교 정문, 학원 앞" maxlength="60">
+      <label class="flabel" for="pfNote">메모 (선택)</label>
+      <textarea class="inp" id="pfNote" rows="2" placeholder="예: 5시까지, 짐이 있어요" maxlength="200"></textarea>
+      <div class="hint" id="pfHint" style="margin-top:10px">정민이가 차를 못 쓸 때 올리는 요청입니다. 성은·남편이 수락하면 바로 표시됩니다.</div>
+      <div class="sheet-actions">
+        <button class="btn primary wide" id="pfSave" type="button">픽업 요청 등록</button>
+        <button class="btn wide" id="pfCancel" type="button">취소</button>
+      </div>
+      <div class="sheet-actions" id="pfExtra"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ================= 상수 ================= */
+  var DB = 'https://heung-office-default-rtdb.firebaseio.com/apps/family-car-2026/';
+  var DOW = ['일','월','화','수','목','금','토'];
+  var ROLES = ['성은','남편','정민'];
+  var CARS = { cira:'씨라', lupin:'루핀' };
+  var TYPES = {
+    off:      { label:'남편 휴무일',      car:false },
+    late:     { label:'남편 외박/미귀가', car:false },
+    seongeun: { label:'성은 차량 사용',   car:true  },
+    jeongmin: { label:'정민 차량 사용',   car:true  }
+  };
+  var TYPE_ORDER = ['off','late','seongeun','jeongmin'];
+
+  /* ================= 유틸 ================= */
+  function $(s,r){ return (r||document).querySelector(s); }
+  function $$(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function parseISO(s){ var p = String(s||'').split('-').map(Number); return new Date(p[0], (p[1]||1)-1, p[2]||1); }
+  function addDays(s,n){ var d = parseISO(s); d.setDate(d.getDate()+n); return iso(d); }
+  function dowOf(s){ return parseISO(s).getDay(); }
+  function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function md(s){ var d = parseISO(s); return (d.getMonth()+1)+'/'+d.getDate(); }
+  function todaySeoul(){
+    try{
+      return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    }catch(e){ return iso(new Date()); }
+  }
+  function lsGet(k,d){ try{ var v = localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+  var TODAY = todaySeoul();
+
+  /* ================= 상태 ================= */
+  var state = {
+    schedules: {},
+    pickups: {},
+    role: ROLES.indexOf(lsGet('fcs.role','성은')) >= 0 ? lsGet('fcs.role','성은') : '성은',
+    selected: TODAY,
+    viewMonth: (function(){ var d = parseISO(TODAY); return new Date(d.getFullYear(), d.getMonth(), 1); })(),
+    insts: {},
+    conn: 'connecting',
+    esOpen: 0
+  };
+
+  var form = { open:false, kind:null, mode:'new', sid:null, instKey:null, baseDate:null,
+               type:'seongeun', date:'', allDay:false, start:'09:00', end:'18:00', car:'cira',
+               status:'requested', repeat:{freq:'none', days:[], day:1}, note:'' };
+
+  var pform = { id:null, date:'', time:'15:30', place:'', note:'', requestedBy:null, acceptedBy:null };
+
+  /* ================= 데이터 정규화 ================= */
+  function normRepeat(s){
+    var r = s && s.repeat;
+    if(!r || !r.freq || r.freq === 'none') return null;
+    if(r.freq === 'weekly'){
+      var days = (r.days && r.days.length) ? r.days.map(Number) : [dowOf(s.date)];
+      return { freq:'weekly', days: days };
+    }
+    if(r.freq === 'monthly'){
+      return { freq:'monthly', day: Number(r.day || parseISO(s.date).getDate()) };
+    }
+    return null;
+  }
+  function repeatText(r){
+    if(!r) return '';
+    if(r.freq === 'weekly') return '매주 ' + r.days.map(function(d){ return DOW[d]; }).join('·');
+    if(r.freq === 'monthly') return '매월 ' + r.day + '일';
+    return '';
+  }
+  function mkInst(s, baseDate, occDate){
+    return {
+      key: s.id + '|' + baseDate,
+      sid: s.id,
+      baseDate: baseDate,
+      occDate: occDate,
+      type: s.type,
+      allDay: !!s.allDay,
+      start: s.start || '00:00',
+      end: s.end || '23:59',
+      car: s.car || null,
+      status: s.status || 'requested',
+      note: s.note || '',
+      repeat: normRepeat(s),
+      by: s.by || '',
+      moved: false,
+      overridden: false
+    };
+  }
+  function matchesRepeat(rep, dateStr){
+    if(!rep) return false;
+    var dow = dowOf(dateStr);
+    if(rep.freq === 'weekly') return rep.days.indexOf(dow) >= 0;
+    if(rep.freq === 'monthly') return Number(dateStr.slice(8,10)) === Number(rep.day);
+    return false;
+  }
+
+  /* 반복 인스턴스 전개: [from,to] 안에 표시될 모든 일정 (이동 예외는 ±62일까지 추적) */
+  function buildInstances(from, to){
+    var res = [];
+    Object.keys(state.schedules).forEach(function(sid){
+      var s = state.schedules[sid];
+      if(!s || !s.date || !TYPES[s.type]) return;
+      var rep = normRepeat(s);
+      if(!rep){
+        if(s.date >= from && s.date <= to) res.push(mkInst(s, s.date, s.date));
+        return;
+      }
+      var d = addDays(from, -62);
+      var stop = addDays(to, 62);
+      while(d <= stop){
+        if(d >= s.date && matchesRepeat(rep, d)){
+          var ex = (s.exceptions && s.exceptions[d]) || null;
+          if(!ex || !ex.skip){
+            var inst = mkInst(s, d, d);
+            if(ex && ex.moveTo){
+              inst.occDate = ex.moveTo;
+              inst.moved = ex.moveTo !== d;
+              inst.overridden = true;
+              if(typeof ex.allDay !== 'undefined') inst.allDay = !!ex.allDay;
+              if(ex.start) inst.start = ex.start;
+              if(ex.end) inst.end = ex.end;
+              if('car' in ex && ex.car) inst.car = ex.car;
+            }
+            if(inst.occDate >= from && inst.occDate <= to) res.push(inst);
+          }
+        }
+        d = addDays(d, 1);
+      }
+    });
+    res.sort(function(a,b){
+      if(a.allDay !== b.allDay) return a.allDay ? -1 : 1;
+      if(a.start !== b.start) return a.start < b.start ? -1 : 1;
+      return TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type);
+    });
+    return res;
+  }
+
+  function indexByDate(list){
+    var map = {};
+    list.forEach(function(i){ (map[i.occDate] = map[i.occDate] || []).push(i); });
+    return map;
+  }
+
+  function overlap(a,b){
+    if(!a.car || !b.car || a.car !== b.car) return false;
+    if(a.occDate && b.occDate && a.occDate !== b.occDate) return false;
+    if(a.allDay || b.allDay) return true;
+    return (a.start < b.end) && (b.start < a.end);
+  }
+  function conflictMap(list){
+    var hit = {};
+    for(var i=0;i<list.length;i++){
+      for(var j=i+1;j<list.length;j++){
+        if(overlap(list[i], list[j])){ hit[list[i].key] = true; hit[list[j].key] = true; }
+      }
+    }
+    return hit;
+  }
+  function conflictPairs(list){
+    var out = [];
+    for(var i=0;i<list.length;i++){
+      for(var j=i+1;j<list.length;j++){
+        if(overlap(list[i], list[j])) out.push([list[i], list[j]]);
+      }
+    }
+    return out;
+  }
+
+  /* ================= Firebase REST + SSE ================= */
+  var streams = [];
+  var pollTimer = null;
+  function setConn(kind){
+    state.conn = kind;
+    var el = $('#conn');
+    if(!el) return;
+    if(kind === 'live'){ el.textContent = '● 실시간'; el.className = 'conn live'; }
+    else if(kind === 'poll'){ el.textContent = '◐ 폴링 동기화'; el.className = 'conn poll'; }
+    else if(kind === 'off'){ el.textContent = '○ 오프라인'; el.className = 'conn off'; }
+    else { el.textContent = '연결 중…'; el.className = 'conn'; }
+  }
+
+  function url(path){ return DB + path + '.json'; }
+
+  function fetchJSON(path){
+    return fetch(url(path), { cache:'no-store' }).then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  function fetchAll(){
+    return Promise.all([fetchJSON('schedules'), fetchJSON('pickups')]).then(function(res){
+      state.schedules = res[0] || {};
+      state.pickups = res[1] || {};
+      renderAll();
+      if(state.esOpen === 0 && !pollTimer) setConn('poll');
+    }).catch(function(){
+      if(state.esOpen === 0) setConn('off');
+    });
+  }
+
+  function stopPolling(){
+    if(pollTimer){ clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function startPolling(){
+    if(pollTimer) return;
+    pollTimer = setInterval(fetchAll, 15000);
+    setConn('poll');
+  }
+
+  function applySchedules(path, data){
+    if(!path || path === '/'){
+      state.schedules = data || {};
+    }else{
+      var id = path.replace(/^\//,'');
+      if(data === null || typeof data === 'undefined') delete state.schedules[id];
+      else state.schedules[id] = data;
+    }
+    renderAll();
+    refreshFormConflict();
+  }
+  function applyPickups(path, data){
+    if(!path || path === '/'){
+      state.pickups = data || {};
+    }else{
+      var id = path.replace(/^\//,'');
+      if(data === null || typeof data === 'undefined') delete state.pickups[id];
+      else state.pickups[id] = data;
+    }
+    renderAll();
+  }
+
+  function openStream(path, apply){
+    if(typeof EventSource === 'undefined') return false;
+    try{
+      var es = new EventSource(url(path));
+      es.addEventListener('put', function(e){
+        try{ var m = JSON.parse(e.data); apply(m.path, m.data); }catch(err){}
+      });
+      es.addEventListener('patch', function(e){
+        try{ var m = JSON.parse(e.data); apply(m.path, m.data); }catch(err){}
+      });
+      es.onopen = function(){ if(!es._open){ es._open = true; state.esOpen++; } setConn('live'); stopPolling(); };
+      es.onerror = function(){ if(es._open){ es._open = false; state.esOpen = Math.max(0, state.esOpen - 1); } startPolling(); };
+      streams.push(es);
+      return true;
+    }catch(err){ return false; }
+  }
+
+  function startSync(){
+    fetchAll().then(function(){
+      var a = openStream('schedules', applySchedules);
+      var b = openStream('pickups', applyPickups);
+      if(!a || !b){ startPolling(); return; }
+      setTimeout(function(){ if(state.esOpen === 0) startPolling(); }, 5000);
+    });
+  }
+
+  function putSchedule(s){
+    state.schedules[s.id] = s;
+    renderAll();
+    refreshFormConflict();
+    return fetch(url('schedules/' + s.id), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(s) })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return true; })
+      .catch(function(e){ toast('저장 실패: ' + e.message); fetchAll(); return false; });
+  }
+  function delSchedule(id){
+    delete state.schedules[id];
+    renderAll();
+    return fetch(url('schedules/' + id), { method:'DELETE' })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return true; })
+      .catch(function(e){ toast('삭제 실패: ' + e.message); fetchAll(); return false; });
+  }
+  function putPickup(p){
+    state.pickups[p.id] = p;
+    renderAll();
+    return fetch(url('pickups/' + p.id), { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(p) })
+      .then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return true; })
+      .catch(function(e){ toast('저장 실패: ' + e.message); fetchAll(); return false; });
+  }
+  function delPickup(id){
+    delete state.pickups[id];
+    renderAll();
+    return fetch(url('pickups/' + id), { method:'DELETE' })
+      .then(function(r){ return true; })
+      .catch(function(e){ toast('삭제 실패: ' + e.message); return false; });
+  }
+
+  /* ================= 렌더: 상단 역할 ================= */
+  function renderRole(){
+    $$('#roleChips .chip').forEach(function(b){
+      b.classList.toggle('on', b.dataset.role === state.role);
+    });
+  }
+
+  /* ================= 렌더: 달력 ================= */
+  function monthRange(){
+    var y = state.viewMonth.getFullYear(), m = state.viewMonth.getMonth();
+    var first = new Date(y, m, 1), last = new Date(y, m+1, 0);
+    return { start: addDays(iso(first), -first.getDay()), end: addDays(iso(last), 6 - last.getDay()) };
+  }
+
+  function renderCalendar(){
+    var y = state.viewMonth.getFullYear(), m = state.viewMonth.getMonth();
+    $('#monthLabel').textContent = y + '년 ' + (m+1) + '월';
+
+    var range = monthRange();
+    var list = buildInstances(range.start, range.end);
+    var idx = indexByDate(list);
+    var hit = conflictMap(list);
+
+    var html = '';
+    for(var d = range.start; d <= range.end; d = addDays(d,1)){
+      var dt = parseISO(d);
+      var items = idx[d] || [];
+      var types = [];
+      items.forEach(function(i){ if(types.indexOf(i.type) < 0) types.push(i.type); });
+      var isOff = items.some(function(i){ return i.type === 'off'; });
+      var hasConf = items.some(function(i){ return hit[i.key]; });
+
+      var cls = 'cell';
+      if(dt.getMonth() !== m) cls += ' other';
+      if(d === TODAY) cls += ' today';
+      if(d === state.selected) cls += ' sel';
+
+      var dots = types.map(function(t){ return '<i class="dot ' + t + '"></i>'; }).join('');
+      var flags = (isOff ? '<span class="avail">정민🚗가능</span>' : '') + (hasConf ? '<span class="cwarn">⚠</span>' : '');
+
+      html += '<button type="button" class="' + cls + '" data-date="' + d + '" aria-label="' + d + '">'
+            +   '<span class="dnum">' + dt.getDate() + '</span>'
+            +   '<span class="dots">' + dots + '</span>'
+            +   '<span class="cellflags">' + flags + '</span>'
+            + '</button>';
+    }
+    $('#grid').innerHTML = html;
+  }
+
+  /* ================= 렌더: 상세 ================= */
+  function timeText(i){
+    if(!TYPES[i.type].car) return i.allDay ? '종일' : '';
+    return i.allDay ? '종일' : (i.start + '~' + i.end);
+  }
+
+  function scheduleCardHTML(i, hit){
+    var t = TYPES[i.type];
+    var isCar = t.car;
+    var cls = 'scard t-' + i.type;
+    if(isCar && i.status !== 'confirmed') cls += ' requested';
+    if(hit[i.key]) cls += ' conflict';
+
+    var tags = '';
+    if(isCar) tags += '<span class="tag car">🚙 ' + CARS[i.car || 'cira'] + '</span>';
+    if(isCar) tags += (i.status === 'confirmed' ? '<span class="tag ok">확정</span>' : '<span class="tag req">요청</span>');
+    if(hit[i.key]) tags += '<span class="tag bad">⚠ 중복</span>';
+    if(i.moved) tags += '<span class="tag moved">↔ ' + md(i.baseDate) + '에서 이동</span>';
+    else if(i.overridden) tags += '<span class="tag moved">이 날짜만 변경</span>';
+
+    var meta = [];
+    if(isCar) meta.push('🕘 ' + timeText(i));
+    else meta.push('종일');
+    if(i.repeat) meta.push('🔁 ' + repeatText(i.repeat));
+
+    var acts = '';
+    if(isCar){
+      acts += '<button type="button" class="mini go" data-act="status" data-key="' + esc(i.key) + '">'
+            + (i.status === 'confirmed' ? '요청으로 되돌리기' : '확정하기') + '</button>';
+    }
+    if(i.repeat){
+      acts += '<button type="button" class="mini" data-act="inst-edit" data-key="' + esc(i.key) + '">이 날짜만 이동</button>';
+      acts += '<button type="button" class="mini danger" data-act="inst-skip" data-key="' + esc(i.key) + '">이 날짜만 삭제</button>';
+      acts += '<button type="button" class="mini" data-act="base-edit" data-sid="' + esc(i.sid) + '">전체 수정</button>';
+      acts += '<button type="button" class="mini danger" data-act="base-del" data-sid="' + esc(i.sid) + '">전체 삭제</button>';
+    }else{
+      acts += '<button type="button" class="mini" data-act="base-edit" data-sid="' + esc(i.sid) + '">수정</button>';
+      acts += '<button type="button" class="mini danger" data-act="base-del" data-sid="' + esc(i.sid) + '">삭제</button>';
+    }
+
+    return '<div class="' + cls + '" data-key="' + esc(i.key) + '">'
+         +   '<div class="sc-row1"><span class="sc-title">' + esc(t.label) + '</span><span class="tags">' + tags + '</span></div>'
+         +   '<div class="sc-meta">' + esc(meta.join(' · ')) + '</div>'
+         +   (i.note ? '<div class="sc-note">' + esc(i.note) + '</div>' : '')
+         +   '<div class="sc-act">' + acts + '</div>'
+         + '</div>';
+  }
+
+  function pickupCardHTML(p){
+    var accepted = p.acceptedBy || null;
+    var cls = 'pcard' + (accepted ? ' done' : '');
+    var stateTag = accepted
+      ? '<span class="p-state accepted">✅ ' + esc(accepted) + ' 수락</span>'
+      : '<span class="p-state pending">수락 대기</span>';
+    var btnS = '<button type="button" class="mini ' + (accepted === '성은' ? 'on' : '') + '" data-act="accept" data-id="' + esc(p.id) + '" data-who="성은">'
+             + (accepted === '성은' ? '성은 수락중' : '성은 수락') + '</button>';
+    var btnH = '<button type="button" class="mini ' + (accepted === '남편' ? 'on' : '') + '" data-act="accept" data-id="' + esc(p.id) + '" data-who="남편">'
+             + (accepted === '남편' ? '남편 수락중' : '남편 수락') + '</button>';
+    return '<div class="' + cls + '" data-id="' + esc(p.id) + '">'
+         +   '<div class="p-row1"><span class="p-time">🕘 ' + esc(p.time || '') + '</span>'
+         +     '<span class="p-who">' + esc(p.requestedBy || '정민') + ' 요청</span>' + stateTag + '</div>'
+         +   '<div class="p-place">📍 ' + esc(p.place || '') + '</div>'
+         +   (p.note ? '<div class="p-note">' + esc(p.note) + '</div>' : '')
+         +   '<div class="sc-act">' + btnS + btnH
+         +     '<button type="button" class="mini" data-act="pedit" data-id="' + esc(p.id) + '">수정</button>'
+         +     '<button type="button" class="mini danger" data-act="pdel" data-id="' + esc(p.id) + '">삭제</button>'
+         +   '</div>'
+         + '</div>';
+  }
+
+  function renderDetail(){
+    var sel = state.selected;
+    var dt = parseISO(sel);
+    var list = buildInstances(sel, sel).filter(function(i){ return i.occDate === sel; });
+    var hit = conflictMap(list);
+    var pairs = conflictPairs(list);
+
+    state.insts = {};
+    list.forEach(function(i){ state.insts[i.key] = i; });
+
+    $('#detailDate').textContent = (dt.getMonth()+1) + '월 ' + dt.getDate() + '일 (' + DOW[dt.getDay()] + ')';
+    $('#detailSub').textContent = sel + (sel === TODAY ? ' · 오늘' : '');
+
+    var isOff = list.some(function(i){ return i.type === 'off'; });
+    var badges = '';
+    if(isOff) badges += '<span class="badge avail">🟢 정민 차량 사용 가능</span>';
+    if(pairs.length) badges += '<span class="badge conf">⚠ 차량 중복 ' + pairs.length + '건</span>';
+    $('#detailBadges').innerHTML = badges;
+
+    var area = '';
+    if(pairs.length){
+      var involvedCars = [];
+      var perCar = {};
+      list.forEach(function(i){
+        if(!hit[i.key]) return;
+        if(!perCar[i.car]){ perCar[i.car] = []; involvedCars.push(i.car); }
+        perCar[i.car].push(i);
+      });
+      area = '<div class="alert"><div><span class="atitle">⚠️ 같은 차량이 겹칩니다</span>'
+           + involvedCars.map(function(car){
+               return '<span class="aline">🚙 ' + CARS[car] + '</span>'
+                 + perCar[car].map(function(i){
+                     return '<span class="aline sub">· ' + timeText(i) + ' ' + TYPES[i.type].label
+                          + (i.status === 'confirmed' ? ' <b>(확정)</b>' : ' (요청)') + '</span>';
+                   }).join('');
+             }).join('')
+           + '</div></div>';
+    }
+    $('#conflictArea').innerHTML = area;
+
+    $('#scheduleList').innerHTML = list.length
+      ? list.map(function(i){ return scheduleCardHTML(i, hit); }).join('')
+      : '<div class="empty">이 날짜에 등록된 일정이 없습니다.<br>오른쪽 위 <b>+ 일정</b>으로 추가하세요.</div>';
+
+    var pickups = Object.keys(state.pickups).map(function(k){ return state.pickups[k]; })
+      .filter(function(p){ return p && p.date === sel; })
+      .sort(function(a,b){ return String(a.time||'').localeCompare(String(b.time||'')); });
+    $('#pickupList').innerHTML = pickups.length
+      ? pickups.map(pickupCardHTML).join('')
+      : '<div class="empty">픽업 요청이 없습니다.</div>';
+  }
+
+  function renderAll(){
+    renderRole();
+    renderCalendar();
+    renderDetail();
+  }
+
+  /* ================= 폼: 공통 ================= */
+  var toastTimer = null;
+  function toast(msg){
+    var el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
+  }
+  function showModal(kind){
+    form.open = true;
+    form.kind = kind;
+    $('#modal').classList.remove('hidden');
+    document.body.classList.add('lock');
+    $('#scheduleForm').classList.toggle('hidden', kind !== 'schedule');
+    $('#pickupForm').classList.toggle('hidden', kind !== 'pickup');
+    $('#sheetTitle').textContent = kind === 'schedule'
+      ? (form.mode === 'new' ? '일정 추가' : (form.mode === 'instance' ? '이 날짜만 수정' : '일정 수정'))
+      : (pform.id ? '픽업 요청 수정' : '픽업 요청');
+    $('#modal').scrollTop = 0;
+    $('#sheet').scrollTop = 0;
+    if(kind === 'schedule'){
+      $('#sfConflict').classList.add('hidden');
+      refreshFormConflict();
+    }
+  }
+  function closeModal(){
+    form.open = false;
+    form.kind = null;
+    $('#modal').classList.add('hidden');
+    $('#sfConflict').classList.add('hidden');
+    document.body.classList.remove('lock');
+  }
+
+  /* ================= 폼: 일정 ================= */
+  function syncFormUI(){
+    var isCar = TYPES[form.type].car;
+    var instMode = form.mode === 'instance';
+
+    $$('#sfTypes .fchip').forEach(function(b){
+      b.classList.toggle('on', b.dataset.type === form.type);
+      b.disabled = instMode && b.dataset.type !== form.type;
+      b.style.opacity = (instMode && b.dataset.type !== form.type) ? '.45' : '';
+    });
+
+    $('#sfDate').value = form.date || '';
+    $('#sfAllDay').checked = !!form.allDay;
+    $('#sfStart').value = form.start || '09:00';
+    $('#sfEnd').value = form.end || '18:00';
+    $('#sfTimes').classList.toggle('hidden', !!form.allDay);
+    $('#sfTimeWrap').classList.toggle('hidden', !isCar && !instMode);
+    if(!isCar && !instMode) $('#sfTimeWrap').classList.add('hidden');
+
+    $('#sfCarWrap').classList.toggle('hidden', !isCar);
+    $$('#sfCars .fchip').forEach(function(b){ b.classList.toggle('on', b.dataset.car === form.car); });
+
+    $('#sfStatusWrap').classList.toggle('hidden', !isCar || instMode);
+    $$('#sfStatus .fchip').forEach(function(b){ b.classList.toggle('on', b.dataset.status === form.status); });
+
+    $('#sfRepeatWrap').classList.toggle('hidden', instMode);
+    $('#sfRepeat').value = form.repeat.freq;
+    $('#sfWeekWrap').classList.toggle('hidden', form.repeat.freq !== 'weekly');
+    $('#sfMonthWrap').classList.toggle('hidden', form.repeat.freq !== 'monthly');
+    $$('#sfWeekdays .fchip').forEach(function(b){
+      b.classList.toggle('on', form.repeat.days.indexOf(Number(b.dataset.dow)) >= 0);
+    });
+    $('#sfMonthDay').value = form.repeat.day || 1;
+    $('#sfNote').value = form.note || '';
+
+    // 안내문
+    var hintEl = $('#sfHint');
+    if(instMode){
+      var s = state.schedules[form.sid];
+      hintEl.classList.remove('hidden');
+      hintEl.classList.remove('err');
+      hintEl.innerHTML = '반복 일정(' + esc(repeatText(normRepeat(s))) + ')의 <b>' + esc(md(form.baseDate)) + '</b> 회차만 수정합니다. 날짜·시간·차량을 바꾸면 그 날짜만 옮겨집니다.';
+    }else{
+      hintEl.classList.add('hidden');
+      hintEl.innerHTML = '';
+    }
+
+    // 하단 버튼
+    var extra = $('#sfExtra');
+    var save = $('#sfSave');
+    if(form.mode === 'new'){
+      save.textContent = '일정 등록';
+      extra.innerHTML = '';
+    }else if(form.mode === 'edit'){
+      save.textContent = '수정 저장';
+      extra.innerHTML = '<button class="btn danger wide" id="sfDelete" type="button">일정 삭제</button>';
+    }else{
+      save.textContent = '이 날짜만 저장';
+      extra.innerHTML =
+        '<button class="btn wide" id="siSkip" type="button">이 날짜만 삭제</button>' +
+        '<button class="btn wide" id="siBase" type="button">전체 수정</button>';
+    }
+    refreshFormConflict();
+  }
+
+  /* 폼 안 실시간 중복 경고 */
+  function refreshFormConflict(){
+    if(!form.open || form.kind !== 'schedule') return;
+    var box = $('#sfConflict');
+    var isCar = TYPES[form.type].car;
+    var hint = $('#sfHint');
+    if(!form.date){ box.classList.add('hidden'); return; }
+
+    var problems = [];
+    if(!isCar){
+      box.classList.add('hidden');
+      return;
+    }
+    if(!form.allDay && (!form.start || !form.end || form.start >= form.end)){
+      box.classList.remove('hidden');
+      box.innerHTML = '⚠️ 종료 시간이 시작 시간보다 빠릅니다.';
+      return;
+    }
+
+    var cand = {
+      key: '__form__', sid: form.sid || null, type: form.type, allDay: !!form.allDay,
+      start: form.start, end: form.end, car: form.car, occDate: form.date
+    };
+    var others = buildInstances(form.date, form.date).filter(function(i){
+      return i.occDate === form.date && i.car && i.sid !== form.sid;
+    });
+    others.forEach(function(o){
+      if(overlap(cand, o)){
+        problems.push('· ' + CARS[o.car] + ' ' + timeText(o) + ' — ' + TYPES[o.type].label + (o.note ? ' (' + o.note + ')' : ''));
+      }
+    });
+
+    if(problems.length){
+      box.classList.remove('hidden');
+      box.innerHTML = '⚠️ 차량 중복! 이 시간에 <b>' + CARS[form.car] + '</b>가 이미 배정돼 있습니다.<br>' + esc(problems.join('\n')).replace(/\n/g,'<br>');
+    }else{
+      box.classList.add('hidden');
+      box.innerHTML = '';
+    }
+  }
+
+  function openScheduleForm(mode, data){
+    form.open = false;
+    form.mode = mode;
+    form.kind = 'schedule';
+    form.instKey = null;
+    form.baseDate = null;
+
+    if(mode === 'new'){
+      form.sid = null;
+      form.type = 'seongeun';
+      form.date = state.selected;
+      form.allDay = false;
+      form.start = '09:00';
+      form.end = '18:00';
+      form.car = 'cira';
+      form.status = 'requested';
+      form.note = '';
+      form.repeat = { freq:'none', days:[dowOf(state.selected)], day: parseISO(state.selected).getDate() };
+    }else if(mode === 'edit'){
+      var s = data;
+      form.sid = s.id;
+      form.type = s.type;
+      form.date = s.date;
+      form.allDay = !!s.allDay;
+      form.start = s.start || '09:00';
+      form.end = s.end || '18:00';
+      form.car = s.car || 'cira';
+      form.status = s.status || 'requested';
+      form.note = s.note || '';
+      var rep = normRepeat(s) || { freq:'none', days:[dowOf(s.date)], day: parseISO(s.date).getDate() };
+      form.repeat = { freq: rep.freq || 'none', days: rep.days || [dowOf(s.date)], day: rep.day || parseISO(s.date).getDate() };
+    }else if(mode === 'instance'){
+      var i = data;
+      form.sid = i.sid;
+      form.instKey = i.key;
+      form.baseDate = i.baseDate;
+      form.type = i.type;
+      form.date = i.occDate;
+      form.allDay = !!i.allDay;
+      form.start = i.start;
+      form.end = i.end;
+      form.car = i.car || 'cira';
+      form.status = i.status;
+      form.note = i.note;
+      form.repeat = { freq:'none', days:[], day:1 };
+    }
+    syncFormUI();
+    showModal('schedule');
+  }
+
+  function readScheduleForm(){
+    form.date = $('#sfDate').value || form.date;
+    form.allDay = $('#sfAllDay').checked;
+    form.start = $('#sfStart').value || form.start;
+    form.end = $('#sfEnd').value || form.end;
+    form.note = $('#sfNote').value;
+    form.repeat.freq = $('#sfRepeat').value;
+    form.repeat.day = Number($('#sfMonthDay').value) || parseISO(form.date).getDate();
+  }
+
+  function saveSchedule(){
+    readScheduleForm();
+    var isCar = TYPES[form.type].car;
+
+    if(!form.date){ toast('날짜를 선택하세요'); return; }
+    if(isCar && !form.allDay && (!form.start || !form.end || form.start >= form.end)){
+      toast('시간 범위를 확인하세요'); return;
+    }
+    if(form.mode === 'instance'){ saveInstance(); return; }
+
+    var id = form.sid || ('s' + Date.now().toString(36) + Math.random().toString(36).slice(2,5));
+    var prev = state.schedules[id] || {};
+    var s = {
+      id: id,
+      type: form.type,
+      date: form.date,
+      allDay: isCar ? !!form.allDay : true,
+      start: (isCar && !form.allDay) ? form.start : '',
+      end: (isCar && !form.allDay) ? form.end : '',
+      car: isCar ? form.car : null,
+      status: isCar ? form.status : 'confirmed',
+      note: form.note || '',
+      repeat: form.repeat.freq === 'none' ? { freq:'none' }
+            : (form.repeat.freq === 'weekly'
+                ? { freq:'weekly', days: (form.repeat.days.length ? form.repeat.days.slice().sort() : [dowOf(form.date)]) }
+                : { freq:'monthly', day: form.repeat.day }),
+      exceptions: prev.exceptions || null,
+      by: state.role,
+      createdAt: prev.createdAt || Date.now(),
+      updatedAt: Date.now(),
+      updatedBy: state.role
+    };
+    putSchedule(s).then(function(ok){
+      if(ok){
+        form.sid = s.id;
+        toast(form.mode === 'edit' ? '수정했습니다' : '일정을 등록했습니다');
+        jumpTo(s.date);
+        closeModal();
+      }
+    });
+  }
+
+  function saveInstance(){
+    var s = state.schedules[form.sid];
+    if(!s){ toast('원본 반복 일정을 찾을 수 없습니다'); return; }
+    var ex = {};
+    Object.keys(s.exceptions || {}).forEach(function(k){ ex[k] = s.exceptions[k]; });
+    var target = {};
+    Object.keys(ex[form.baseDate] || {}).forEach(function(k){ target[k] = ex[form.baseDate][k]; });
+
+    target.skip = false;
+    target.moveTo = form.date;
+    target.allDay = !!form.allDay;
+    target.start = form.start;
+    target.end = form.end;
+    if(TYPES[s.type].car) target.car = form.car;
+
+    ex[form.baseDate] = target;
+    var next = {};
+    Object.keys(s).forEach(function(k){ next[k] = s[k]; });
+    next.exceptions = ex;
+    next.updatedAt = Date.now();
+    next.updatedBy = state.role;
+
+    putSchedule(next).then(function(ok){
+      if(ok){
+        toast('이 날짜만 수정했습니다');
+        jumpTo(form.date);
+        closeModal();
+      }
+    });
+  }
+
+  function jumpTo(dateStr){
+    state.selected = dateStr;
+    var d = parseISO(dateStr);
+    state.viewMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    renderAll();
+  }
+
+  /* ================= 폼: 픽업 ================= */
+  function openPickupForm(p){
+    pform.id = p ? p.id : null;
+    pform.date = p ? p.date : state.selected;
+    pform.time = p ? (p.time || '15:30') : '15:30';
+    pform.place = p ? (p.place || '') : '';
+    pform.note = p ? (p.note || '') : '';
+    pform.requestedBy = p ? (p.requestedBy || null) : state.role;
+    pform.acceptedBy = p ? (p.acceptedBy || null) : null;
+
+    $('#pfDate').value = pform.date;
+    $('#pfTime').value = pform.time;
+    $('#pfPlace').value = pform.place;
+    $('#pfNote').value = pform.note;
+    $('#pfSave').textContent = pform.id ? '수정 저장' : '픽업 요청 등록';
+    $('#pfExtra').innerHTML = pform.id ? '<button class="btn danger wide" id="pfDelete" type="button">요청 삭제</button>' : '';
+
+    showModal('pickup');
+  }
+
+  function savePickup(){
+    pform.date = $('#pfDate').value || pform.date;
+    pform.time = $('#pfTime').value || pform.time;
+    pform.place = $('#pfPlace').value.trim();
+    pform.note = $('#pfNote').value.trim();
+    if(!pform.date){ toast('날짜를 선택하세요'); return; }
+    if(!pform.place){ toast('장소를 입력하세요'); return; }
+
+    var p = {
+      id: pform.id || ('p' + Date.now().toString(36) + Math.random().toString(36).slice(2,5)),
+      date: pform.date,
+      time: pform.time,
+      place: pform.place,
+      note: pform.note,
+      requestedBy: pform.requestedBy || '정민',
+      acceptedBy: pform.acceptedBy || null,
+      updatedAt: Date.now()
+    };
+    if(!p.createdBy) p.createdBy = state.role;
+    putPickup(p).then(function(ok){
+      if(ok){ toast(pform.id ? '수정했습니다' : '픽업 요청을 등록했습니다'); jumpTo(p.date); closeModal(); }
+    });
+  }
+
+  /* ================= 이벤트 ================= */
+  $('#roleChips').addEventListener('click', function(e){
+    var b = e.target.closest('.chip');
+    if(!b) return;
+    state.role = b.dataset.role;
+    lsSet('fcs.role', state.role);
+    renderRole();
+    toast('내 역할: ' + state.role);
+  });
+
+  $('#prevMonth').addEventListener('click', function(){
+    state.viewMonth = new Date(state.viewMonth.getFullYear(), state.viewMonth.getMonth()-1, 1);
+    renderCalendar();
+  });
+  $('#nextMonth').addEventListener('click', function(){
+    state.viewMonth = new Date(state.viewMonth.getFullYear(), state.viewMonth.getMonth()+1, 1);
+    renderCalendar();
+  });
+  $('#todayBtn').addEventListener('click', function(){
+    var d = parseISO(TODAY);
+    state.viewMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    state.selected = TODAY;
+    renderAll();
+  });
+
+  $('#grid').addEventListener('click', function(e){
+    var c = e.target.closest('.cell');
+    if(!c) return;
+    state.selected = c.dataset.date;
+    var d = parseISO(state.selected);
+    if(d.getMonth() !== state.viewMonth.getMonth() || d.getFullYear() !== state.viewMonth.getFullYear()){
+      state.viewMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    }
+    renderAll();
+  });
+
+  $('#addScheduleBtn').addEventListener('click', function(){ openScheduleForm('new'); });
+  $('#addPickupBtn').addEventListener('click', function(){ openPickupForm(null); });
+
+  /* 일정 카드 액션 */
+  $('#scheduleList').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-act]');
+    if(!b) return;
+    var act = b.dataset.act;
+    var key = b.dataset.key;
+    var sid = b.dataset.sid;
+    var inst = key ? state.insts[key] : null;
+
+    if(act === 'status'){
+      var s = state.schedules[inst.sid];
+      if(!s) return;
+      var next = {};
+      Object.keys(s).forEach(function(k){ next[k] = s[k]; });
+      next.status = (s.status === 'confirmed') ? 'requested' : 'confirmed';
+      next.updatedAt = Date.now();
+      next.updatedBy = state.role;
+      putSchedule(next).then(function(ok){
+        if(ok) toast(next.status === 'confirmed' ? state.role + ' 확정했습니다' : '요청 상태로 되돌렸습니다');
+      });
+    }else if(act === 'inst-edit'){
+      if(inst) openScheduleForm('instance', inst);
+    }else if(act === 'inst-skip'){
+      if(!inst) return;
+      if(!confirm(md(inst.occDate) + ' 회차만 반복 일정에서 제외할까요?')) return;
+      var base = state.schedules[inst.sid];
+      if(!base) return;
+      var ex = {};
+      Object.keys(base.exceptions || {}).forEach(function(k){ ex[k] = base.exceptions[k]; });
+      ex[inst.baseDate] = { skip:true };
+      var nx = {};
+      Object.keys(base).forEach(function(k){ nx[k] = base[k]; });
+      nx.exceptions = ex;
+      nx.updatedAt = Date.now();
+      putSchedule(nx).then(function(ok){ if(ok) toast('이 날짜만 삭제했습니다'); });
+    }else if(act === 'base-edit'){
+      var sc = state.schedules[sid];
+      if(sc) openScheduleForm('edit', sc);
+    }else if(act === 'base-del'){
+      var sc2 = state.schedules[sid];
+      if(!sc2) return;
+      var label = TYPES[sc2.type].label + (normRepeat(sc2) ? ' (반복 전체)' : '');
+      if(!confirm('"' + label + '" 일정을 삭제할까요?')) return;
+      delSchedule(sid).then(function(ok){ if(ok) toast('삭제했습니다'); });
+    }
+  });
+
+  /* 픽업 카드 액션 */
+  $('#pickupList').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-act]');
+    if(!b) return;
+    var act = b.dataset.act;
+    var id = b.dataset.id;
+    var p = state.pickups[id];
+    if(!p) return;
+
+    if(act === 'accept'){
+      var who = b.dataset.who;
+      var next = {};
+      Object.keys(p).forEach(function(k){ next[k] = p[k]; });
+      next.acceptedBy = (p.acceptedBy === who) ? null : who;
+      next.acceptedAt = next.acceptedBy ? Date.now() : null;
+      putPickup(next).then(function(ok){
+        if(ok) toast(next.acceptedBy ? next.acceptedBy + ' 수락했습니다' : '수락을 취소했습니다');
+      });
+    }else if(act === 'pedit'){
+      openPickupForm(p);
+    }else if(act === 'pdel'){
+      if(!confirm('픽업 요청을 삭제할까요?')) return;
+      delPickup(id).then(function(ok){ if(ok) toast('삭제했습니다'); });
+    }
+  });
+
+  /* 폼: 일정 종류 */
+  $('#sfTypes').addEventListener('click', function(e){
+    var b = e.target.closest('.fchip');
+    if(!b || b.disabled) return;
+    form.type = b.dataset.type;
+    syncFormUI();
+  });
+  $('#sfCars').addEventListener('click', function(e){
+    var b = e.target.closest('.fchip');
+    if(!b) return;
+    form.car = b.dataset.car;
+    syncFormUI();
+  });
+  $('#sfStatus').addEventListener('click', function(e){
+    var b = e.target.closest('.fchip');
+    if(!b) return;
+    form.status = b.dataset.status;
+    syncFormUI();
+  });
+  $('#sfWeekdays').addEventListener('click', function(e){
+    var b = e.target.closest('.fchip');
+    if(!b) return;
+    var d = Number(b.dataset.dow);
+    var i = form.repeat.days.indexOf(d);
+    if(i >= 0) form.repeat.days.splice(i,1); else form.repeat.days.push(d);
+    syncFormUI();
+  });
+  $('#sfRepeat').addEventListener('change', function(){
+    form.repeat.freq = this.value;
+    if(form.repeat.freq === 'weekly' && !form.repeat.days.length) form.repeat.days = [dowOf(form.date)];
+    if(form.repeat.freq === 'monthly') form.repeat.day = parseISO(form.date).getDate();
+    syncFormUI();
+  });
+  $('#sfMonthDay').addEventListener('change', function(){
+    form.repeat.day = Math.min(31, Math.max(1, Number(this.value) || 1));
+    this.value = form.repeat.day;
+    refreshFormConflict();
+  });
+  $('#sfDate').addEventListener('change', function(){
+    form.date = this.value;
+    refreshFormConflict();
+  });
+  $('#sfAllDay').addEventListener('change', function(){
+    form.allDay = this.checked;
+    $('#sfTimes').classList.toggle('hidden', !!form.allDay);
+    refreshFormConflict();
+  });
+  $('#sfStart').addEventListener('change', function(){ form.start = this.value; refreshFormConflict(); });
+  $('#sfEnd').addEventListener('change', function(){ form.end = this.value; refreshFormConflict(); });
+  $('#sfNote').addEventListener('input', function(){ form.note = this.value; });
+
+  $('#sfSave').addEventListener('click', saveSchedule);
+  $('#sfCancel').addEventListener('click', closeModal);
+  $('#sfExtra').addEventListener('click', function(e){
+    var b = e.target.closest('button');
+    if(!b) return;
+    if(b.id === 'sfDelete'){
+      var s = state.schedules[form.sid];
+      if(!s) return;
+      if(!confirm('이 일정을 삭제할까요?')) return;
+      delSchedule(s.id).then(function(ok){ if(ok){ toast('삭제했습니다'); closeModal(); } });
+    }else if(b.id === 'siSkip'){
+      var inst = state.insts[form.instKey];
+      var base = state.schedules[form.sid];
+      if(!base || !form.baseDate) return;
+      if(!confirm(md(form.baseDate) + ' 회차만 반복 일정에서 제외할까요?')) return;
+      var ex = {};
+      Object.keys(base.exceptions || {}).forEach(function(k){ ex[k] = base.exceptions[k]; });
+      ex[form.baseDate] = { skip:true };
+      var nx = {};
+      Object.keys(base).forEach(function(k){ nx[k] = base[k]; });
+      nx.exceptions = ex;
+      nx.updatedAt = Date.now();
+      putSchedule(nx).then(function(ok){ if(ok){ toast('이 날짜만 삭제했습니다'); closeModal(); } });
+    }else if(b.id === 'siBase'){
+      var sc = state.schedules[form.sid];
+      if(sc) openScheduleForm('edit', sc);
+    }
+  });
+
+  /* 폼: 픽업 */
+  $('#pfSave').addEventListener('click', savePickup);
+  $('#pfCancel').addEventListener('click', closeModal);
+  $('#pfExtra').addEventListener('click', function(e){
+    var b = e.target.closest('button');
+    if(b && b.id === 'pfDelete'){
+      if(!confirm('픽업 요청을 삭제할까요?')) return;
+      delPickup(pform.id).then(function(ok){ if(ok){ toast('삭제했습니다'); closeModal(); } });
+    }
+  });
+
+  $('#sheetClose').addEventListener('click', closeModal);
+  $('#modal').addEventListener('click', function(e){ if(e.target.id === 'modal') closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && form.open) closeModal(); });
+
+  window.addEventListener('online', function(){ fetchAll(); });
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) fetchAll(); });
+
+  /* ================= 시작 ================= */
+  renderAll();
+  setConn('connecting');
+  startSync();
+
+  /* 디버그용 (테스트/검증) */
+  window.__fcs = { state: state, buildInstances: buildInstances, renderAll: renderAll, TODAY: TODAY };
+})();
+</script>
+</body>
+</html>
