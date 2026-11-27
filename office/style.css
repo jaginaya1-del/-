@@ -2047,24 +2047,28 @@ body.is-locked { overflow: hidden; }
   object-fit: cover;
 }
 
-/* 구역 — 투명 점선 오버레이 */
+/* 구역 — 라벨·클릭 영역만 두고 눈에 보이는 테두리는 없앤다 */
 .clay-zone {
   position: absolute;
   display: block;
   margin: 0;
   padding: 0;
-  border: 1.5px dashed rgba(255, 253, 247, .82);
+  border: none;
   border-radius: 15px;
-  background: rgba(255, 252, 244, .05);
-  box-shadow: inset 0 0 0 1px rgba(120, 86, 40, .07), 0 2px 12px -10px rgba(60, 35, 12, .9);
-  transition: background .16s, border-color .16s, box-shadow .16s;
+  background: transparent;
+  box-shadow: none;
+  transition: background .16s;
   z-index: 2;
   -webkit-tap-highlight-color: transparent;
 }
 
 .clay-zone:active {
-  background: rgba(255, 250, 238, .18);
-  border-color: #FFFDF7;
+  background: rgba(255, 250, 238, .14);
+}
+
+.clay-zone:focus-visible {
+  outline: 2px solid rgba(199, 154, 75, .85);
+  outline-offset: 2px;
 }
 
 .clay-zone-label {
@@ -2138,7 +2142,7 @@ body.is-locked { overflow: hidden; }
 .av-lamang     { left: 47.5%; top: 41%;   --ring: #EFDCC0; }
 .av-kkomaengi  { left: 63%;   top: 34.5%; --ring: #E3BD8B; }
 .av-imseogeun  { left: 76%;   top: 46%;   --ring: #9BCFE6; }
-.av-haseon     { left: 86.5%; top: 60%;   --ring: #F3C3CC; }
+.av-haseon     { left: 52.5%; top: 73.5%; --ring: #F3C3CC; }   /* 라운지 빈백에 앉아 쉬는 중 */
 
 .clay-tag {
   max-width: 76px;
