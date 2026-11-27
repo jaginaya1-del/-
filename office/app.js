@@ -1106,7 +1106,7 @@
     const s = pname === '성은' ? ownTalkToday() : (stats[pname] || { talk: 0, work: 0, lastMs: 0 });
     const score = s.talk * POINT_TALK + s.work * POINT_WORK;
     const lv = quotaLevel(score);
-    const on = !!agentOnlineMap()[pname];
+    const on = pname === '성은' ? true : !!agentOnlineMap()[pname];
     const last = lastMessageOf(pname);
 
     let lastHtml = '<span class="dd-none">아직 남긴 말이 없어요.</span>';
