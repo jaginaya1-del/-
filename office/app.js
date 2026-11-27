@@ -1321,9 +1321,6 @@
     try {
       await write('messages/' + state.channel, 'POST', payload);
       input.value = '';
-      if (voiceOn) stopVoiceInput();   // 보내면 듣기도 끝낸다
-      voiceBase = '';
-      voiceFinal = '';
       state.photos = [];
       renderPhotoTray();
       const box = $('msgScroll');
@@ -1357,129 +1354,6 @@
       renderPhotoTray();
     }
   });
-
-  /* ---------------- 음성 입력 (Web Speech API) ---------------- */
-
-  const VoiceSR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const VOICE_HINT = '크롬·삼성 인터넷에서 마이크 권한을 허용하면 음성으로 입력할 수 있어요';
-  let voiceRec = null;
-  let voiceOn = false;
-  let voiceBase = '';    // 듣기를 시작할 때 입력창에 있던 글
-  let voiceFinal = '';   // 확정된 인식 결과
-
-  function joinSpeech(left, right) {
-    const a = String(left || '').replace(/\s+$/, '');
-    const b = String(right || '').replace(/^\s+/, '');
-    if (!a) return b;
-    if (!b) return a;
-    return a + ' ' + b;
-  }
-
-  function setVoiceState(on) {
-    voiceOn = on;
-    const btn = $('btnVoiceInput');
-    if (!btn) return;
-    btn.classList.toggle('listening', on);
-    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    btn.setAttribute('aria-label', on ? '음성 입력 듣는 중 — 다시 누르면 종료' : '음성으로 입력');
-    btn.title = on ? '듣는 중 — 다시 누르면 종료' : '음성으로 입력';
-  }
-
-  /* 기존 글 뒤에 공백을 두고 이어 붙인다 */
-  function applyVoiceText(interim) {
-    const input = $('msgInput');
-    if (!input) return;
-    const spoken = joinSpeech(voiceFinal, interim);
-    const base = String(voiceBase || '').replace(/\s+$/, '');
-    input.value = spoken ? joinSpeech(base, spoken) : base;
-    const end = input.value.length;
-    try { input.setSelectionRange(end, end); } catch (err) { /* 무시 */ }
-  }
-
-  function buildVoiceRec() {
-    const rec = new VoiceSR();
-    rec.lang = 'ko-KR';
-    rec.interimResults = true;
-    rec.continuous = false;
-    rec.maxAlternatives = 1;
-
-    rec.onstart = () => setVoiceState(true);
-
-    rec.onresult = (e) => {
-      let interim = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const r = e.results[i];
-        const text = r[0] && r[0].transcript ? r[0].transcript.trim() : '';
-        if (!text) continue;
-        if (r.isFinal) voiceFinal = joinSpeech(voiceFinal, text);
-        else interim = joinSpeech(interim, text);
-      }
-      applyVoiceText(interim);
-    };
-
-    rec.onerror = (e) => {
-      const code = (e && e.error) || '';
-      setVoiceState(false);
-      if (code === 'not-allowed' || code === 'service-not-allowed') {
-        toast(VOICE_HINT);
-      } else if (code === 'audio-capture') {
-        toast('마이크를 찾지 못했어요 — 기기 마이크를 확인한 뒤 다시 눌러 주세요');
-      } else if (code === 'no-speech') {
-        toast('잘 안 들렸어요 — 🎤를 한 번 더 눌러 말해 주세요');
-      } else if (code === 'network') {
-        toast('음성 인식 서버에 연결이 안 돼요 — 잠시 뒤 다시 눌러 주세요');
-      } else if (code !== 'aborted') {
-        toast(VOICE_HINT);
-      }
-    };
-
-    rec.onend = () => {
-      setVoiceState(false);
-    };
-
-    return rec;
-  }
-
-  function startVoiceInput() {
-    if (!VoiceSR) { toast(VOICE_HINT); return; }
-    const input = $('msgInput');
-    voiceBase = input ? input.value : '';
-    voiceFinal = '';
-    try {
-      if (!voiceRec) voiceRec = buildVoiceRec();
-      voiceRec.start();
-      setVoiceState(true);
-      toast('듣고 있어요 — 말씀하시면 입력창에 적어요');
-    } catch (err) {
-      /* 이전 세션이 남아 있으면 정리하고 한 번만 다시 */
-      try { voiceRec.abort(); } catch (e1) { /* 무시 */ }
-      voiceRec = null;
-      try {
-        voiceRec = buildVoiceRec();
-        voiceRec.start();
-        setVoiceState(true);
-      } catch (e2) {
-        setVoiceState(false);
-        toast(VOICE_HINT);
-      }
-    }
-  }
-
-  function stopVoiceInput() {
-    try { if (voiceRec) voiceRec.stop(); } catch (err) { /* 무시 */ }
-    setVoiceState(false);
-  }
-
-  if ($('btnVoiceInput')) {
-    $('btnVoiceInput').addEventListener('click', () => {
-      if (voiceOn) { stopVoiceInput(); return; }
-      startVoiceInput();
-    });
-    if (!VoiceSR) {
-      $('btnVoiceInput').classList.add('is-unsupported');
-      $('btnVoiceInput').title = VOICE_HINT;
-    }
-  }
 
   /* 사진 크게 보기 + 지휘실 상태 변경 */
   $('msgList').addEventListener('click', async (e) => {

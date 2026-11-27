@@ -656,30 +656,6 @@ a { color: inherit; text-decoration: none; }
 .photo-btn:hover { background: #FBF1DF; border-color: #EFE1CA; }
 .photo-btn:active { transform: scale(.94); }
 
-/* 음성 입력 */
-
-.voice-btn {
-  margin-left: -3px;
-  font-size: 16px;
-}
-.voice-btn:hover { background: #FBF1DF; border-color: #EFE1CA; }
-.voice-btn.listening {
-  background: linear-gradient(180deg, #FF8E70, #F2543D);
-  border-color: #F2543D;
-  color: #FFF;
-  box-shadow: 0 0 0 0 rgba(242, 84, 61, .5);
-  animation: voice-pulse 1.15s ease-in-out infinite;
-}
-.voice-btn.listening:hover { background: linear-gradient(180deg, #FF8E70, #F2543D); border-color: #F2543D; }
-.voice-btn.is-unsupported { opacity: .55; }
-@keyframes voice-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 84, 61, .5); }
-  55% { box-shadow: 0 0 0 7px rgba(242, 84, 61, 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .voice-btn.listening { animation: none; box-shadow: 0 0 0 4px rgba(242, 84, 61, .22); }
-}
-
 .photo-tray {
   display: flex;
   flex-wrap: wrap;
