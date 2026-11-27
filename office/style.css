@@ -402,6 +402,84 @@ a { color: inherit; text-decoration: none; }
   color: #4A2F22;
 }
 
+/* 코드 블록 (``` … ```) + 복사 버튼 */
+
+.msg-body.has-code { max-width: 96%; }
+
+.msg-code-block {
+  margin-top: 6px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #4A382A;
+  background: #33261A;
+  box-shadow: 0 4px 12px -10px rgba(0, 0, 0, .8);
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 7px 5px 10px;
+  background: #3E2E20;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+
+.code-label {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  color: #D9C3A2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.code-copy {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: rgba(255, 249, 240, .12);
+  color: #FFF6E8;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s, transform .12s;
+}
+.code-copy:active { transform: scale(.96); }
+.code-copy.is-done {
+  background: rgba(122, 200, 142, .28);
+  border-color: rgba(150, 222, 170, .45);
+  color: #E2F8E6;
+}
+
+.code-body {
+  margin: 0;
+  padding: 9px 10px 10px;
+  max-height: 300px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "D2Coding", "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #F3E6D4;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.code-body code {
+  font: inherit;
+  color: inherit;
+  background: none;
+  white-space: inherit;
+}
+
+.msg.is-own .msg-code-block { margin-left: auto; }
+
 /* 지휘실 말풍선 아래 작업 상태 */
 .msg-task {
   display: flex;
