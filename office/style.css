@@ -1866,6 +1866,14 @@ body.is-locked { overflow: hidden; }
   height: 36px;
 }
 
+.dd-fig {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 3px rgba(74, 48, 22, .28));
+}
+
 .dd-dot {
   position: absolute;
   right: 3px;

@@ -911,6 +911,15 @@
     '하선 사원': '🐰 토끼'
   };
 
+  /* 상세 카드 아바타 — 클레이 맵과 같은 3D 피규어 */
+  const CHAR_IMG = {
+    '성은': 'img/char-tiger.png',
+    '라망이 팀장': 'img/char-sheep.png',
+    '꼬맹이 대리': 'img/char-cat.png',
+    '임석은 사원': 'img/char-dolphin.png',
+    '하선 사원': 'img/char-rabbit.png'
+  };
+
   const LOAD_LABEL = { ok: '여유', warn: '보통', busy: '많음' };
   const MOTION_KEY = 'heung-office-motion';
   const MODE_KEY = 'heung-office-map-mode';
@@ -1113,9 +1122,9 @@
       lastHtml = body + '<em>' + r.icon + ' ' + esc(r.name) + ' · ' + esc(when) + '</em>';
     }
 
-    const headId = CHAR_HEAD[pname];
-    const avatarInner = headId
-      ? '<svg class="dd-char" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#' + headId + '"></use></svg>'
+    const figSrc = CHAR_IMG[pname];
+    const avatarInner = figSrc
+      ? '<img class="dd-fig" src="' + figSrc + '" alt="" decoding="async">'
       : esc(p.emoji);
     const kind = CHAR_KIND[pname] ? ' · ' + CHAR_KIND[pname] : '';
 
