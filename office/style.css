@@ -2097,69 +2097,64 @@ body.is-locked { overflow: hidden; }
 .zone-lounge { left: 45%; top: 56%; width: 52%; height: 33%; }
 .zone-lounge .clay-zone-label { left: 5px; bottom: 5px; }
 
-/* 캐릭터 동그란 배지 */
+/* 3D 클레이 피규어 — 투명 배경 그대로 의자에 앉힌다 */
 .clay-avatar {
   position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  width: 32px;
+  display: block;
   margin: 0;
   padding: 0;
   border: none;
   background: none;
-  transform: translate(-50%, -50%);
-  transform-origin: 50% 78%;      /* 의자에 앉은 몸통을 축으로 고개만 까딱 */
+  line-height: 0;
+  transform: translate(-50%, -100%);   /* 발밑 좌표가 좌석에 닿는다 */
+  transform-origin: 50% 100%;          /* 고개를 까딱일 때 발은 고정 */
   z-index: 4;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* 작아진 배지도 손가락으로 누르기 쉽게 클릭 영역만 넓힌다 */
+/* 작은 피규어도 손가락으로 누르기 쉽게 클릭 영역만 넓힌다 */
 .clay-avatar::after {
   content: "";
   position: absolute;
-  left: -8px;
-  right: -8px;
-  top: -8px;
+  left: -9px;
+  right: -9px;
+  top: -9px;
   bottom: -6px;
 }
 
-.clay-bubble {
-  position: relative;
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 26%, #FFFEFB 0%, #FBF1DF 62%, #EFDCBC 100%);
-  border: 2px solid rgba(255, 255, 255, .95);
-  box-shadow:
-    0 0 0 1.5px var(--ring, #E7D3B6),
-    0 5px 12px -7px rgba(80, 50, 20, .9),
-    inset 0 1px 0 #fff;
-  transition: transform .16s, box-shadow .16s;
-}
-
-.clay-bubble svg {
+.clay-figure {
   display: block;
-  width: 25px;
-  height: 25px;
+  height: var(--fh, 46px);
+  width: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter:
+    drop-shadow(0 5px 4px rgba(74, 48, 22, .34))
+    drop-shadow(0 1px 1px rgba(74, 48, 22, .28));
+  transition: transform .16s, filter .16s;
 }
 
-/* 배경 이미지의 의자 좌석 위에 앉은 위치 */
-.av-ceo        { left: 44%;   top: 24.5%; --ring: #F0B877; }
-.av-lamang     { left: 47.5%; top: 40.5%; --ring: #EFDCC0; }
-.av-kkomaengi  { left: 63%;   top: 34%;   --ring: #E3BD8B; }
-.av-imseogeun  { left: 76%;   top: 45.5%; --ring: #9BCFE6; }
-.av-haseon     { left: 87.5%; top: 61%;   --ring: #F3C3CC; }   /* 라운지 소파에 앉아 쉬는 중 */
+.av-ceo        { left: 44%;   top: 28.5%; --ring: #F0B877; }
+.av-ceo .clay-figure        { --fh: 50px; }
+.av-lamang     { left: 47.5%; top: 42.5%; --ring: #EFDCC0; }
+.av-lamang .clay-figure     { --fh: 44px; }
+.av-kkomaengi  { left: 63%;   top: 36.5%; --ring: #E3BD8B; }
+.av-kkomaengi .clay-figure  { --fh: 46px; }
+.av-imseogeun  { left: 76%;   top: 47.5%; --ring: #9BCFE6; }
+.av-imseogeun .clay-figure  { --fh: 44px; }
+.av-haseon     { left: 87.5%; top: 63.5%; --ring: #F3C3CC; }
+.av-haseon .clay-figure     { --fh: 52px; }
 
 .clay-tag {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 1px);
+  transform: translateX(-50%) translateY(-2px);
   max-width: 76px;
-  margin-top: -1px;
   padding: 1px 5px;
   border-radius: 999px;
-  background: rgba(255, 252, 246, .92);
+  background: rgba(255, 252, 246, .94);
   border: 1px solid rgba(235, 218, 192, .95);
   color: #6B5540;
   font-size: 7.5px;
@@ -2170,12 +2165,22 @@ body.is-locked { overflow: hidden; }
   overflow: hidden;
   text-overflow: ellipsis;
   box-shadow: 0 2px 6px -5px rgba(80, 50, 20, .95);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .16s, transform .16s;
+}
+
+.clay-avatar:hover .clay-tag,
+.clay-avatar:focus-visible .clay-tag,
+.clay-avatar.is-selected .clay-tag {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .clay-dot {
   position: absolute;
   right: 0;
-  top: 0;
+  top: 8px;
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -2185,13 +2190,11 @@ body.is-locked { overflow: hidden; }
 }
 .clay-dot.is-idle { background: #D7B87A; }
 
-.clay-avatar.is-selected .clay-bubble {
-  transform: scale(1.14);
-  box-shadow:
-    0 0 0 2px #E2785A,
-    0 0 0 5px rgba(226, 120, 90, .22),
-    0 6px 14px -7px rgba(80, 50, 20, .95),
-    inset 0 1px 0 #fff;
+.clay-avatar.is-selected .clay-figure {
+  transform: scale(1.08);
+  filter:
+    drop-shadow(0 0 2px rgba(226, 120, 90, .85))
+    drop-shadow(0 6px 5px rgba(74, 48, 22, .4));
 }
 .clay-avatar.is-selected .clay-tag {
   background: #FFF7EC;
@@ -2208,31 +2211,31 @@ body.is-locked { overflow: hidden; }
 .clay-map.is-lively .av-haseon    { animation-name: clayBreathe; --dur: 5.4s; animation-delay: 2.3s; }
 
 @keyframes clayNod {
-  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  22%      { transform: translate(-50%, -50%) rotate(-2.6deg); }
-  48%      { transform: translate(-50%, -50%) rotate(1.8deg); }
-  72%      { transform: translate(-50%, -50%) rotate(-1.2deg); }
+  0%, 100% { transform: translate(-50%, -100%) rotate(0deg); }
+  22%      { transform: translate(-50%, -100%) rotate(-2.6deg); }
+  48%      { transform: translate(-50%, -100%) rotate(1.8deg); }
+  72%      { transform: translate(-50%, -100%) rotate(-1.2deg); }
 }
 @keyframes clayTilt {
-  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  30%      { transform: translate(-50%, -50%) rotate(2.8deg); }
-  64%      { transform: translate(-50%, -50%) rotate(-2.2deg); }
+  0%, 100% { transform: translate(-50%, -100%) rotate(0deg); }
+  30%      { transform: translate(-50%, -100%) rotate(2.8deg); }
+  64%      { transform: translate(-50%, -100%) rotate(-2.2deg); }
 }
 @keyframes claySway {
-  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  26%      { transform: translate(-50%, -50%) rotate(-2.4deg); }
-  58%      { transform: translate(-50%, -50%) rotate(2.6deg); }
-  82%      { transform: translate(-50%, -50%) rotate(-1.2deg); }
+  0%, 100% { transform: translate(-50%, -100%) rotate(0deg); }
+  26%      { transform: translate(-50%, -100%) rotate(-2.4deg); }
+  58%      { transform: translate(-50%, -100%) rotate(2.6deg); }
+  82%      { transform: translate(-50%, -100%) rotate(-1.2deg); }
 }
 @keyframes clayPeek {
-  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  34%      { transform: translate(-50%, -50%) rotate(2.2deg); }
-  68%      { transform: translate(-50%, -50%) rotate(-3deg); }
+  0%, 100% { transform: translate(-50%, -100%) rotate(0deg); }
+  34%      { transform: translate(-50%, -100%) rotate(2.2deg); }
+  68%      { transform: translate(-50%, -100%) rotate(-3deg); }
 }
 @keyframes clayBreathe {
-  0%, 100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
-  44%      { transform: translate(-50%, -50%) rotate(1.4deg) scale(1.03); }
-  74%      { transform: translate(-50%, -50%) rotate(-1deg) scale(1.01); }
+  0%, 100% { transform: translate(-50%, -100%) rotate(0deg) scale(1); }
+  44%      { transform: translate(-50%, -100%) rotate(1.4deg) scale(1.03); }
+  74%      { transform: translate(-50%, -100%) rotate(-1deg) scale(1.01); }
 }
 
 /* 지금 본부에서는 — 방별 최신 한 줄 */
@@ -2303,9 +2306,7 @@ body.is-locked { overflow: hidden; }
   .office-map { aspect-ratio: 1 / 1.16; }
   .desk-name { font-size: 8.4px; max-width: 62px; }
   .map-title { font-size: 16px; }
-  .clay-bubble { width: 36px; height: 36px; }
-  .clay-bubble svg { width: 28px; height: 28px; }
-  .clay-avatar { width: 36px; }
+  .clay-figure { height: calc(var(--fh, 46px) * .88); }
   .clay-tag { font-size: 7px; max-width: 66px; }
 }
 
