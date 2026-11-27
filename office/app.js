@@ -102,7 +102,7 @@
     lastKey: '',
     channel: 'main',
     sender: '성은',
-    view: 'chat',
+    view: 'map',
     busy: false,
     online: null,
     photos: []
@@ -412,6 +412,7 @@
     renderAgents();
     renderQuota();
     renderMemos();
+    renderMap();
   }
 
   function room() { return (state.data || {}); }
@@ -773,6 +774,174 @@
       '</article>').join('');
   }
 
+  /* ---------------- 오피스 맵 ---------------- */
+
+  /* 책상에 앉은 비서 — 부를 때 넣을 멘션 표기 */
+  const MAP_DESKS = [
+    { name: '라망이 팀장', mention: '@라망이팀장 ' },
+    { name: '꼬맹이 대리', mention: '@꼬맹이대리 ' },
+    { name: '임석은 사원', mention: '@임석은사원 ' },
+    { name: '하선 사원', mention: '@하선사원 ' }
+  ];
+
+  const LOAD_LABEL = { ok: '여유', warn: '보통', busy: '많음' };
+  const MOTION_KEY = 'heung-office-motion';
+
+  const mapState = { selected: '', motion: true };
+
+  function readMotion() {
+    try {
+      if (localStorage.getItem(MOTION_KEY) === 'off') mapState.motion = false;
+    } catch (err) { /* 저장소를 못 쓰는 브라우저는 기본 ON */ }
+    applyMotion();
+  }
+
+  function applyMotion() {
+    const box = $('officeMap');
+    const btn = $('motionToggle');
+    if (!box || !btn) return;
+    box.classList.toggle('is-lively', mapState.motion);
+    btn.classList.toggle('is-on', mapState.motion);
+    btn.setAttribute('aria-pressed', mapState.motion ? 'true' : 'false');
+    $('motionLabel').textContent = mapState.motion ? '✨ 움직임 ON' : '✨ 움직임 OFF';
+  }
+
+  function agentOnlineMap() {
+    const out = {};
+    toList(room().agents || {}).forEach(function (a) {
+      const pname = AGENT_KEYS[a.id] || personName(a.name) || a.name;
+      if (pname) out[pname] = a.status === 'online';
+    });
+    return out;
+  }
+
+  /* 진행 중인 일 — 작업실의 미완료 작업 + 지휘실의 대기·진행 지시 */
+  function activeWorkCount() {
+    let n = 0;
+    toList(room().tasks || {}).forEach(function (t) {
+      if (t.status !== 'done') n += 1;
+    });
+    channelMessages('command').forEach(function (m) {
+      if (m.taskStatus === 'pending' || m.taskStatus === 'running') n += 1;
+    });
+    return n;
+  }
+
+  function lastMessageOf(pname) {
+    let best = null;
+    Object.keys(ROOMS).forEach(function (ch) {
+      channelMessages(ch).forEach(function (m) {
+        if (personName(m.sender) !== pname) return;
+        if (!best || (m.ts || 0) > (best.ts || 0)) best = Object.assign({ channel: ch }, m);
+      });
+    });
+    return best;
+  }
+
+  function renderMap() {
+    if (!$('officeMap')) return;
+
+    const work = activeWorkCount();
+    $('mapHeadline').textContent = work > 0
+      ? '대장님, 진행 중인 작업 ' + work + '건이 있어요'
+      : '대장님, 비서 ' + quotaTargets().length + '명이 대기 중이에요';
+
+    const agents = toList(room().agents || {});
+    $('mapOnlineChip').textContent = '👥 ON ' + (agents.length + 1) + '명';
+    $('mapRoomChip').textContent = '🟢 ' + Object.keys(ROOMS).length + '개 방 가동';
+
+    const stats = todayActivity();
+    const onMap = agentOnlineMap();
+
+    document.querySelectorAll('#deskGrid .desk').forEach(function (el) {
+      const pname = el.dataset.agent;
+      const s = stats[pname] || { talk: 0, work: 0, lastMs: 0 };
+      const lv = quotaLevel(s.talk * POINT_TALK + s.work * POINT_WORK);
+
+      const badge = el.querySelector('[data-load]');
+      if (badge) {
+        badge.textContent = LOAD_LABEL[lv.cls] || lv.label;
+        badge.className = 'desk-load is-' + lv.cls;
+      }
+
+      const dot = el.querySelector('[data-dot]');
+      if (dot) dot.classList.toggle('is-idle', !onMap[pname]);
+
+      el.classList.toggle('is-selected', mapState.selected === pname);
+      el.setAttribute('aria-label', pname + ' 상세 보기 — 오늘 말 ' + s.talk + '건, 작업 ' + s.work + '건');
+    });
+
+    renderDeskDetail();
+  }
+
+  function renderDeskDetail() {
+    const box = $('deskDetail');
+    if (!box) return;
+
+    const pname = mapState.selected;
+    if (!pname || !PERSON[pname]) {
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+
+    const p = PERSON[pname];
+    const stats = todayActivity();
+    const s = stats[pname] || { talk: 0, work: 0, lastMs: 0 };
+    const score = s.talk * POINT_TALK + s.work * POINT_WORK;
+    const lv = quotaLevel(score);
+    const on = !!agentOnlineMap()[pname];
+    const last = lastMessageOf(pname);
+
+    let lastHtml = '<span class="dd-none">아직 남긴 말이 없어요.</span>';
+    if (last) {
+      const r = ROOMS[last.channel] || ROOMS.main;
+      const raw = String(last.text == null ? '' : last.text).trim();
+      const body = raw
+        ? esc(raw.length > 90 ? raw.slice(0, 90) + '…' : raw)
+        : '📷 사진을 남겼어요';
+      const when = last.ts ? kstClock(last.ts) : (last.timeStr || '');
+      lastHtml = body + '<em>' + r.icon + ' ' + esc(r.name) + ' · ' + esc(when) + '</em>';
+    }
+
+    box.hidden = false;
+    box.innerHTML = '' +
+      '<div class="dd-head">' +
+        '<span class="dd-avatar" aria-hidden="true">' + esc(p.emoji) +
+          '<i class="dd-dot' + (on ? '' : ' is-idle') + '"></i></span>' +
+        '<div class="dd-id">' +
+          '<h3 class="dd-name">' + esc(pname) + '</h3>' +
+          '<p class="dd-role">' + esc(p.role || '비서') + ' · ' + (on ? '지금 활동 중' : '대기 중') + '</p>' +
+        '</div>' +
+        '<button type="button" class="dd-close" data-dd-close aria-label="상세 닫기">✕</button>' +
+      '</div>' +
+      '<div class="dd-stats">' +
+        '<span>오늘 말<b>' + s.talk + '건</b></span>' +
+        '<span>오늘 작업<b>' + s.work + '건</b></span>' +
+        '<span>활동량<b>' + (LOAD_LABEL[lv.cls] || lv.label) + '</b></span>' +
+      '</div>' +
+      '<p class="dd-last-label">마지막 남긴 말</p>' +
+      '<p class="dd-last">' + lastHtml + '</p>' +
+      '<button type="button" class="dd-call" data-dd-call="' + esc(pname) + '">🎯 지휘실에서 부르기</button>';
+  }
+
+  /* 지휘실로 이동하며 입력창에 @이름 을 채워 둔다 (보내기는 대장님이) */
+  function callToCommand(pname) {
+    const entry = MAP_DESKS.filter(function (d) { return d.name === pname; })[0];
+    const mention = entry ? entry.mention : '@' + pname.replace(/\s+/g, '') + ' ';
+
+    switchView('chat');
+    switchChannel('command');
+    switchSender('성은');
+
+    const input = $('msgInput');
+    input.value = mention;
+    try { input.setSelectionRange(mention.length, mention.length); } catch (err) { /* 무시 */ }
+    input.focus();
+    requestAnimationFrame(function () { scrollBottom(true); });
+    toast(mention.trim() + ' 부를 준비를 했어요 — 지휘실이에요');
+  }
+
   /* ---------------- 내비게이션 ---------------- */
 
   function switchView(view) {
@@ -788,6 +957,7 @@
     });
     if (view === 'chat') requestAnimationFrame(() => scrollBottom(false));
     if (view === 'quota') renderQuota();
+    if (view === 'map') renderMap();
   }
 
   function switchChannel(channel) {
@@ -821,6 +991,45 @@
   document.getElementById('mainNav').addEventListener('click', (e) => {
     const btn = e.target.closest('.tab');
     if (btn) switchView(btn.dataset.view);
+  });
+
+  /* 오피스 맵 — 방 클릭 → 그 방으로 즉시 전환 */
+  document.getElementById('officeMap').addEventListener('click', (e) => {
+    const roomBtn = e.target.closest('[data-open-room]');
+    if (!roomBtn) return;
+    switchView('chat');
+    switchChannel(roomBtn.dataset.openRoom);
+  });
+
+  /* 오피스 맵 — 비서 책상 클릭 → 상세 카드 */
+  document.getElementById('deskGrid').addEventListener('click', (e) => {
+    const desk = e.target.closest('.desk');
+    if (!desk) return;
+    const name = desk.dataset.agent;
+    mapState.selected = (mapState.selected === name) ? '' : name;
+    renderMap();
+    if (mapState.selected) {
+      const box = $('deskDetail');
+      if (box && box.scrollIntoView) {
+        requestAnimationFrame(() => box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+      }
+    }
+  });
+
+  document.getElementById('deskDetail').addEventListener('click', (e) => {
+    if (e.target.closest('[data-dd-close]')) {
+      mapState.selected = '';
+      renderMap();
+      return;
+    }
+    const call = e.target.closest('[data-dd-call]');
+    if (call) callToCommand(call.dataset.ddCall);
+  });
+
+  document.getElementById('motionToggle').addEventListener('click', () => {
+    mapState.motion = !mapState.motion;
+    applyMotion();
+    try { localStorage.setItem(MOTION_KEY, mapState.motion ? 'on' : 'off'); } catch (err) { /* 무시 */ }
   });
 
   document.getElementById('chatTabs').addEventListener('click', (e) => {
@@ -1011,6 +1220,7 @@
   /* ---------------- 시작 ---------------- */
 
   setConn('connecting');
+  readMotion();
   pull(false);
   setInterval(() => { if (!document.hidden) pull(false); }, POLL_MS);
 
