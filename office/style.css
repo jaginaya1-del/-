@@ -2104,7 +2104,7 @@ body.is-locked { overflow: hidden; }
   flex-direction: column;
   align-items: center;
   gap: 0;
-  width: 38px;
+  width: 32px;
   margin: 0;
   padding: 0;
   border: none;
@@ -2115,10 +2115,20 @@ body.is-locked { overflow: hidden; }
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 작아진 배지도 손가락으로 누르기 쉽게 클릭 영역만 넓힌다 */
+.clay-avatar::after {
+  content: "";
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: -8px;
+  bottom: -6px;
+}
+
 .clay-bubble {
   position: relative;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -2133,16 +2143,16 @@ body.is-locked { overflow: hidden; }
 
 .clay-bubble svg {
   display: block;
-  width: 29px;
-  height: 29px;
+  width: 25px;
+  height: 25px;
 }
 
 /* 배경 이미지의 의자 좌석 위에 앉은 위치 */
-.av-ceo        { left: 44%;   top: 25%;   --ring: #F0B877; }
-.av-lamang     { left: 47.5%; top: 41%;   --ring: #EFDCC0; }
-.av-kkomaengi  { left: 63%;   top: 34.5%; --ring: #E3BD8B; }
-.av-imseogeun  { left: 76%;   top: 46%;   --ring: #9BCFE6; }
-.av-haseon     { left: 52.5%; top: 73.5%; --ring: #F3C3CC; }   /* 라운지 빈백에 앉아 쉬는 중 */
+.av-ceo        { left: 44%;   top: 24.5%; --ring: #F0B877; }
+.av-lamang     { left: 47.5%; top: 40.5%; --ring: #EFDCC0; }
+.av-kkomaengi  { left: 63%;   top: 34%;   --ring: #E3BD8B; }
+.av-imseogeun  { left: 76%;   top: 45.5%; --ring: #9BCFE6; }
+.av-haseon     { left: 87.5%; top: 61%;   --ring: #F3C3CC; }   /* 라운지 소파에 앉아 쉬는 중 */
 
 .clay-tag {
   max-width: 76px;
@@ -2164,10 +2174,10 @@ body.is-locked { overflow: hidden; }
 
 .clay-dot {
   position: absolute;
-  right: 1px;
-  top: 1px;
-  width: 8px;
-  height: 8px;
+  right: 0;
+  top: 0;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #4EB86A;
   border: 1.5px solid #FFFCF4;
