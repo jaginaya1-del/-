@@ -1669,8 +1669,8 @@ body.is-locked { overflow: hidden; }
 /* 라운지 — 소파 · 테이블 */
 .lounge-rug {
   position: absolute;
-  left: 10%;
-  right: 26%;
+  left: 24%;
+  right: 14%;
   bottom: 3px;
   height: 58%;
   border-radius: 50%;
@@ -1695,16 +1695,16 @@ body.is-locked { overflow: hidden; }
   pointer-events: none;
 }
 .sofa.is-v {
-  left: 15%;
+  left: 30%;
   bottom: 8px;
   width: 18px;
   height: 38px;
   border-radius: 9px 9px 5px 5px;
 }
 .sofa.is-h {
-  left: 21%;
+  left: 36%;
   bottom: 8px;
-  width: 35%;
+  width: 34%;
   height: 20px;
   border-radius: 6px 9px 9px 6px;
 }
@@ -1718,7 +1718,7 @@ body.is-locked { overflow: hidden; }
 
 .lounge-table {
   position: absolute;
-  left: 58%;
+  left: 74%;
   bottom: 9px;
   width: 22px;
   height: 22px;
