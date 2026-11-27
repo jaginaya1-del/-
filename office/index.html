@@ -8,7 +8,7 @@
 <meta name="description" content="흥장군 비서실 — 성은님 전용 AI 합동작업실. 오피스 맵·회의실·작업실·비서현황·AI한도·메모.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
-<link rel="stylesheet" href="style.css?v=20261127r">
+<link rel="stylesheet" href="style.css?v=20261127s">
 </head>
 <body>
 
@@ -60,6 +60,24 @@
     <circle cx="24.7" cy="32.2" r="0.8" fill="#FFF"/>
     <path d="M18 38 Q22 40.8 26 38.6" stroke="#3D6A80" stroke-width="1.5" fill="none" stroke-linecap="round"/>
     <circle cx="31" cy="40.5" r="2" fill="#F3A98C" opacity=".4"/>
+  </symbol>
+  <symbol id="head-seongeun" viewBox="0 0 64 64">
+    <path d="M17 29 q-3 -9 6 -7 q2.6 3.4 1.4 7 z" fill="#F0A64E" stroke="#D9832F" stroke-width="1.1"/>
+    <path d="M47 29 q3 -9 -6 -7 q-2.6 3.4 -1.4 7 z" fill="#F0A64E" stroke="#D9832F" stroke-width="1.1"/>
+    <path d="M19.6 24.4 q1.6 2.6 .8 5.2" stroke="#F7D2A6" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <path d="M44.4 24.4 q-1.6 2.6 -.8 5.2" stroke="#F7D2A6" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="32" cy="38.5" rx="17.5" ry="15" fill="#F0A64E" stroke="#D9832F" stroke-width="1.2"/>
+    <path d="M32 23.8 V28" stroke="#8A4A17" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M24 27 q-1.6 2.6 0 5" stroke="#8A4A17" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M40 27 q1.6 2.6 0 5" stroke="#8A4A17" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <ellipse cx="32" cy="43" rx="10" ry="6.6" fill="#FCEBD2"/>
+    <circle cx="25.6" cy="36.4" r="2.2" fill="#3E2C1E"/>
+    <circle cx="38.4" cy="36.4" r="2.2" fill="#3E2C1E"/>
+    <circle cx="26.3" cy="35.6" r="0.75" fill="#FFF"/>
+    <circle cx="39.1" cy="35.6" r="0.75" fill="#FFF"/>
+    <path d="M30.2 41 h3.6 l-1.8 2.1 z" fill="#B4593A"/>
+    <path d="M32 43.1 v1.6 M32 44.7 q-1.8 1.5 -3.1 .2 M32 44.7 q1.8 1.5 3.1 .2" stroke="#8A5A2B" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <path d="M18.6 40 h-4 M19 43 h-4 M45.4 40 h4 M45 43 h4" stroke="#C27A3F" stroke-width="0.9" stroke-linecap="round" opacity=".8"/>
   </symbol>
   <symbol id="head-haseon" viewBox="0 0 64 64">
     <ellipse cx="23" cy="21" rx="5.6" ry="13" fill="#FDF7F6" stroke="#EBD9D6" stroke-width="1.5" transform="rotate(-10 23 21)"/>
@@ -128,12 +146,67 @@
             <p class="map-sub">방을 눌러 들어가 보세요. 방마다 비서들이 일하고 있어요.</p>
           </div>
 
-          <div class="map-chips" aria-label="비서실 상태">
+          <div class="map-chips" aria-label="오피스 맵 보기 방식">
+            <div class="map-mode" role="group" aria-label="오피스 맵 전환">
+              <button type="button" class="map-mode-btn" data-map-mode="flat" aria-pressed="false">🗺️ 기본</button>
+              <button type="button" class="map-mode-btn is-on" data-map-mode="clay" aria-pressed="true">🧸 클레이</button>
+            </div>
             <button type="button" class="map-chip chip-toggle is-on" id="motionToggle" aria-pressed="true">
               <span id="motionLabel">✨ 움직임 ON</span>
             </button>
+          </div>
+
+          <div class="map-chips" aria-label="비서실 상태">
             <span class="map-chip" id="mapRoomChip">🟢 3개 방 가동</span>
             <span class="map-chip" id="mapOnlineChip">👥 ON 5명</span>
+          </div>
+
+          <div class="map-stage is-clay" id="mapStage">
+
+          <!-- 3D 클레이 오피스 -->
+          <div class="clay-map" id="clayMap" role="group" aria-label="3D 클레이 오피스 맵">
+            <div class="clay-stage">
+              <img class="clay-shot" src="img/office-clay.png" width="1000" height="1000"
+                   alt="3D 클레이 미니어처 오피스 — 왼쪽 대회의실, 가운데 지휘실, 오른쪽 아래 라운지"
+                   decoding="async">
+
+              <button type="button" class="clay-zone zone-hall" data-open-room="main" aria-label="대회의실로 들어가기">
+                <span class="clay-zone-label">🏛️ 대회의실</span>
+              </button>
+              <button type="button" class="clay-zone zone-command" data-open-room="command" aria-label="지휘실로 들어가기">
+                <span class="clay-zone-label">🎯 지휘실</span>
+              </button>
+              <button type="button" class="clay-zone zone-lounge" data-open-room="lounge" aria-label="라운지로 들어가기">
+                <span class="clay-zone-label">☕ 라운지</span>
+              </button>
+
+              <button type="button" class="clay-avatar av-ceo" data-agent="성은" aria-label="성은 대장님 상세 보기">
+                <span class="clay-bubble"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#head-seongeun"></use></svg></span>
+                <span class="clay-tag" aria-hidden="true">성은 대장님</span>
+                <i class="clay-dot" data-dot aria-hidden="true"></i>
+              </button>
+              <button type="button" class="clay-avatar av-lamang" data-agent="라망이 팀장" aria-label="라망이 팀장 상세 보기">
+                <span class="clay-bubble"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#head-lamang"></use></svg></span>
+                <span class="clay-tag" aria-hidden="true">라망이 팀장</span>
+                <i class="clay-dot" data-dot aria-hidden="true"></i>
+              </button>
+              <button type="button" class="clay-avatar av-kkomaengi" data-agent="꼬맹이 대리" aria-label="꼬맹이 대리 상세 보기">
+                <span class="clay-bubble"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#head-kkomaengi"></use></svg></span>
+                <span class="clay-tag" aria-hidden="true">꼬맹이 대리</span>
+                <i class="clay-dot" data-dot aria-hidden="true"></i>
+              </button>
+              <button type="button" class="clay-avatar av-imseogeun" data-agent="임석은 사원" aria-label="임석은 사원 상세 보기">
+                <span class="clay-bubble"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#head-imseogeun"></use></svg></span>
+                <span class="clay-tag" aria-hidden="true">임석은 사원</span>
+                <i class="clay-dot" data-dot aria-hidden="true"></i>
+              </button>
+              <button type="button" class="clay-avatar av-haseon" data-agent="하선 사원" aria-label="하선 사원 상세 보기">
+                <span class="clay-bubble"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#head-haseon"></use></svg></span>
+                <span class="clay-tag" aria-hidden="true">하선 사원</span>
+                <i class="clay-dot" data-dot aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="room-briefs" id="roomBriefs" aria-label="지금 본부에서는"></div>
           </div>
 
           <div class="office-map is-lively" id="officeMap" role="group" aria-label="사무실 평면도">
@@ -334,6 +407,8 @@
 
           </div>
 
+          </div><!-- /map-stage -->
+
           <div class="desk-detail" id="deskDetail" hidden aria-live="polite"></div>
 
           <p class="map-foot">지휘실에서 이름을 부르면 바로 지시가 닿아요 · 방을 누르면 그 방으로 들어갑니다</p>
@@ -487,6 +562,6 @@
   </div>
 </div>
 
-<script src="app.js?v=20261127r"></script>
+<script src="app.js?v=20261127s"></script>
 </body>
 </html>

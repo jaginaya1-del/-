@@ -895,14 +895,16 @@
     { name: '하선 사원', mention: '@하선사원 ' }
   ];
 
-  /* 책상 위 캐릭터 — 소금빵 · 마들렌 · 돌고래 · 토끼 (index.html 의 symbol 을 그대로 쓴다) */
+  /* 책상 위 캐릭터 — 호랑이 · 양 · 고양이 · 돌고래 · 토끼 (index.html 의 symbol 을 그대로 쓴다) */
   const CHAR_HEAD = {
+    '성은': 'head-seongeun',
     '라망이 팀장': 'head-lamang',
     '꼬맹이 대리': 'head-kkomaengi',
     '임석은 사원': 'head-imseogeun',
     '하선 사원': 'head-haseon'
   };
   const CHAR_KIND = {
+    '성은': '🐯 호랑이',
     '라망이 팀장': '🐑 양',
     '꼬맹이 대리': '🐱 고양이',
     '임석은 사원': '🐬 돌고래',
@@ -911,8 +913,9 @@
 
   const LOAD_LABEL = { ok: '여유', warn: '보통', busy: '많음' };
   const MOTION_KEY = 'heung-office-motion';
+  const MODE_KEY = 'heung-office-map-mode';
 
-  const mapState = { selected: '', motion: true };
+  const mapState = { selected: '', motion: true, mode: 'clay' };
 
   function readMotion() {
     try {
@@ -922,13 +925,36 @@
   }
 
   function applyMotion() {
-    const box = $('officeMap');
     const btn = $('motionToggle');
-    if (!box || !btn) return;
-    box.classList.toggle('is-lively', mapState.motion);
+    if (!btn) return;
+    ['officeMap', 'clayMap'].forEach(function (id) {
+      const box = $(id);
+      if (box) box.classList.toggle('is-lively', mapState.motion);
+    });
     btn.classList.toggle('is-on', mapState.motion);
     btn.setAttribute('aria-pressed', mapState.motion ? 'true' : 'false');
     $('motionLabel').textContent = mapState.motion ? '✨ 움직임 ON' : '✨ 움직임 OFF';
+  }
+
+  /* 🧸 클레이 / 🗺️ 기본 — 처음은 클레이, 선택은 저장 */
+  function readMode() {
+    try {
+      if (localStorage.getItem(MODE_KEY) === 'flat') mapState.mode = 'flat';
+    } catch (err) { /* 저장소를 못 쓰는 브라우저는 기본값 클레이 */ }
+    applyMode();
+  }
+
+  function applyMode() {
+    const stage = $('mapStage');
+    if (!stage) return;
+    const clay = mapState.mode === 'clay';
+    stage.classList.toggle('is-clay', clay);
+    stage.classList.toggle('is-flat', !clay);
+    document.querySelectorAll('.map-mode-btn').forEach(function (b) {
+      const on = b.dataset.mapMode === mapState.mode;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
   }
 
   function agentOnlineMap() {
@@ -950,6 +976,22 @@
       if (m.taskStatus === 'pending' || m.taskStatus === 'running') n += 1;
     });
     return n;
+  }
+
+  /* 대장님 본인 기록 — AI한도 집계에서는 빠지므로 상세 카드용으로 따로 센다 */
+  function ownTalkToday() {
+    const today = kstDay(Date.now());
+    let talk = 0;
+    let lastMs = 0;
+    Object.keys(ROOMS).forEach(function (ch) {
+      channelMessages(ch).forEach(function (m) {
+        if (!m.ts || kstDay(m.ts) !== today) return;
+        if (personName(m.sender) !== '성은') return;
+        talk += 1;
+        if (m.ts > lastMs) lastMs = m.ts;
+      });
+    });
+    return { talk: talk, work: 0, lastMs: lastMs };
   }
 
   function lastMessageOf(pname) {
@@ -996,7 +1038,47 @@
       el.setAttribute('aria-label', pname + ' 상세 보기 — 오늘 말 ' + s.talk + '건, 작업 ' + s.work + '건');
     });
 
+    /* 클레이 맵 — 캐릭터 배지도 같은 선택·활동 상태를 따른다 */
+    document.querySelectorAll('#clayMap .clay-avatar').forEach(function (el) {
+      const pname = el.dataset.agent;
+      const on = pname === '성은' ? true : !!onMap[pname];
+      const dot = el.querySelector('[data-dot]');
+      if (dot) dot.classList.toggle('is-idle', !on);
+      el.classList.toggle('is-selected', mapState.selected === pname);
+    });
+
+    renderRoomBriefs();
     renderDeskDetail();
+  }
+
+  /* 지금 본부에서는 — 방마다 마지막 한 줄 + 입장 */
+  function renderRoomBriefs() {
+    const box = $('roomBriefs');
+    if (!box) return;
+
+    const cards = Object.keys(ROOMS).map(function (ch) {
+      const meta = ROOMS[ch];
+      const items = channelMessages(ch);
+      const last = items[items.length - 1];
+      let line = '아직 조용해요';
+      if (last) {
+        const who = personName(last.sender);
+        const raw = String(last.text == null ? '' : last.text)
+          .replace(/```[a-z]*\s*/gi, ' ').replace(/\s+/g, ' ').trim();
+        const body = raw ? (raw.length > 34 ? raw.slice(0, 34) + '…' : raw) : '📷 사진을 남겼어요';
+        line = '<b>' + esc(who || last.sender) + '</b> · ' + esc(body);
+      }
+      return '<button type="button" class="room-brief" data-brief-room="' + ch + '" aria-label="' + esc(meta.name) + ' 입장">' +
+        '<span class="rb-ico" aria-hidden="true">' + meta.icon + '</span>' +
+        '<span class="rb-body">' +
+          '<span class="rb-name">' + esc(meta.name) + '</span>' +
+          '<span class="rb-line">' + line + '</span>' +
+        '</span>' +
+        '<span class="rb-go" aria-hidden="true">입장 →</span>' +
+      '</button>';
+    }).join('');
+
+    box.innerHTML = '<p class="rb-title">지금 본부에서는</p>' + cards;
   }
 
   function renderDeskDetail() {
@@ -1012,7 +1094,7 @@
 
     const p = PERSON[pname];
     const stats = todayActivity();
-    const s = stats[pname] || { talk: 0, work: 0, lastMs: 0 };
+    const s = pname === '성은' ? ownTalkToday() : (stats[pname] || { talk: 0, work: 0, lastMs: 0 });
     const score = s.talk * POINT_TALK + s.work * POINT_WORK;
     const lv = quotaLevel(score);
     const on = !!agentOnlineMap()[pname];
@@ -1126,19 +1208,24 @@
     if (btn) switchView(btn.dataset.view);
   });
 
-  /* 오피스 맵 — 방 클릭 → 그 방으로 즉시 전환 */
-  document.getElementById('officeMap').addEventListener('click', (e) => {
+  /* 오피스 맵 — 방 클릭 → 그 방으로 즉시 전환 (클레이·기본 공통) */
+  document.getElementById('mapStage').addEventListener('click', (e) => {
     const roomBtn = e.target.closest('[data-open-room]');
-    if (!roomBtn) return;
-    switchView('chat');
-    switchChannel(roomBtn.dataset.openRoom);
+    if (roomBtn) {
+      switchView('chat');
+      switchChannel(roomBtn.dataset.openRoom);
+      return;
+    }
+    const brief = e.target.closest('[data-brief-room]');
+    if (brief) {
+      switchView('chat');
+      switchChannel(brief.dataset.briefRoom);
+    }
   });
 
-  /* 오피스 맵 — 비서 책상 클릭 → 상세 카드 */
-  document.getElementById('deskGrid').addEventListener('click', (e) => {
-    const desk = e.target.closest('.desk');
-    if (!desk) return;
-    const name = desk.dataset.agent;
+  /* 오피스 맵 — 비서 책상·클레이 캐릭터 클릭 → 상세 카드 */
+  function selectDesk(name) {
+    if (!name) return;
     mapState.selected = (mapState.selected === name) ? '' : name;
     renderMap();
     if (mapState.selected) {
@@ -1147,6 +1234,25 @@
         requestAnimationFrame(() => box.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
       }
     }
+  }
+
+  document.getElementById('clayMap').addEventListener('click', (e) => {
+    const av = e.target.closest('.clay-avatar');
+    if (av) selectDesk(av.dataset.agent);
+  });
+
+  document.getElementById('deskGrid').addEventListener('click', (e) => {
+    const desk = e.target.closest('.desk');
+    if (desk) selectDesk(desk.dataset.agent);
+  });
+
+  /* 🧸 클레이 / 🗺️ 기본 전환 */
+  document.querySelectorAll('.map-mode-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      mapState.mode = btn.dataset.mapMode === 'flat' ? 'flat' : 'clay';
+      applyMode();
+      try { localStorage.setItem(MODE_KEY, mapState.mode); } catch (err) { /* 무시 */ }
+    });
   });
 
   document.getElementById('deskDetail').addEventListener('click', (e) => {
@@ -1356,6 +1462,7 @@
 
   setConn('connecting');
   readMotion();
+  readMode();
   pull(false);
   setInterval(() => { if (!document.hidden) pull(false); }, POLL_MS);
 
