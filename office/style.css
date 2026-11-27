@@ -1419,10 +1419,10 @@ body.is-locked { overflow: hidden; }
 /* 대회의실 — 긴 회의 테이블 + 의자 */
 .hall-table {
   position: absolute;
-  left: 30%;
-  right: 30%;
-  top: 13%;
-  bottom: 13%;
+  left: 31%;
+  right: 31%;
+  top: 14%;
+  bottom: 14%;
   border-radius: 999px;
   background: linear-gradient(90deg, #AE7641 0%, #8B5526 55%, #7C4A1F 100%);
   border: 1px solid #6C3F17;
@@ -1445,16 +1445,16 @@ body.is-locked { overflow: hidden; }
 
 .hall-chairs {
   position: absolute;
-  width: 8.5%;
-  top: 14%;
-  bottom: 14%;
+  width: 9%;
+  top: 15%;
+  bottom: 15%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   z-index: 1;
 }
-.hall-chairs.is-left { left: 15%; }
-.hall-chairs.is-right { right: 15%; }
+.hall-chairs.is-left { left: 19.5%; }
+.hall-chairs.is-right { right: 19.5%; }
 .hall-chairs i {
   display: block;
   height: 10px;
@@ -1481,10 +1481,10 @@ body.is-locked { overflow: hidden; }
   position: absolute;
   left: 50%;
   bottom: 8px;
-  width: 46%;
-  height: 24px;
+  width: 44%;
+  height: 30px;
   transform: translateX(-50%);
-  border-radius: 6px;
+  border-radius: 7px;
   background: linear-gradient(180deg, #AB7341, #844F1F);
   border: 1px solid #6C3F17;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 3px 6px -5px rgba(60, 35, 12, .9);
@@ -1494,9 +1494,9 @@ body.is-locked { overflow: hidden; }
 .cmd-screen {
   position: absolute;
   left: 50%;
-  top: -11px;
-  width: 42%;
-  height: 13px;
+  top: -12px;
+  width: 52%;
+  height: 16px;
   transform: translateX(-50%);
   border-radius: 3px;
   background: linear-gradient(180deg, #CFE2E0, #A9C4C6);
@@ -1506,13 +1506,13 @@ body.is-locked { overflow: hidden; }
 .cmd-avatar {
   position: absolute;
   left: 50%;
-  bottom: 28px;
-  width: 20px;
-  height: 20px;
+  bottom: 34px;
+  width: 22px;
+  height: 22px;
   transform: translateX(-50%);
   display: grid;
   place-items: center;
-  font-size: 11px;
+  font-size: 12px;
   border-radius: 50%;
   background: #FFFCF4;
   border: 1.5px solid #E0C69E;
@@ -1522,9 +1522,9 @@ body.is-locked { overflow: hidden; }
 
 .cmd-name {
   position: absolute;
-  right: 7px;
-  bottom: 9px;
-  font-size: 8.5px;
+  right: 5px;
+  bottom: 14px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: -.03em;
   color: #8A6A44;
@@ -1588,8 +1588,8 @@ body.is-locked { overflow: hidden; }
 
 .desk-monitor {
   position: relative;
-  width: 54%;
-  height: 21px;
+  width: 58%;
+  height: 24px;
   margin-top: 2px;
   border-radius: 4px;
   background: linear-gradient(180deg, #4A3A2B, #392B1E);
@@ -1696,17 +1696,17 @@ body.is-locked { overflow: hidden; }
 }
 .sofa.is-v {
   left: 15%;
-  bottom: 7px;
-  width: 15px;
-  height: 32px;
-  border-radius: 8px 8px 5px 5px;
+  bottom: 8px;
+  width: 18px;
+  height: 38px;
+  border-radius: 9px 9px 5px 5px;
 }
 .sofa.is-h {
   left: 21%;
-  bottom: 7px;
-  width: 34%;
-  height: 16px;
-  border-radius: 5px 8px 8px 5px;
+  bottom: 8px;
+  width: 35%;
+  height: 20px;
+  border-radius: 6px 9px 9px 6px;
 }
 .sofa.is-h::after {
   content: "";
@@ -1718,10 +1718,10 @@ body.is-locked { overflow: hidden; }
 
 .lounge-table {
   position: absolute;
-  left: 57%;
-  bottom: 8px;
-  width: 19px;
-  height: 19px;
+  left: 58%;
+  bottom: 9px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: linear-gradient(180deg, #FCF2E2, #EBD7B8);
   border: 1px solid #DFC6A1;
