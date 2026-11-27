@@ -2157,8 +2157,9 @@ body.is-locked { overflow: hidden; }
 .clay-tag {
   position: absolute;
   left: 50%;
-  top: calc(100% + 1px);
-  transform: translateX(-50%) translateY(-2px);
+  bottom: calc(100% + 2px);
+  top: auto;
+  transform: translateX(-50%) translateY(2px);
   max-width: 76px;
   padding: 1px 5px;
   border-radius: 999px;
