@@ -2100,20 +2100,21 @@ body.is-locked { overflow: hidden; }
   flex-direction: column;
   align-items: center;
   gap: 0;
-  width: 40px;
+  width: 38px;
   margin: 0;
   padding: 0;
   border: none;
   background: none;
   transform: translate(-50%, -50%);
+  transform-origin: 50% 78%;      /* 의자에 앉은 몸통을 축으로 고개만 까딱 */
   z-index: 4;
   -webkit-tap-highlight-color: transparent;
 }
 
 .clay-bubble {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -2128,15 +2129,16 @@ body.is-locked { overflow: hidden; }
 
 .clay-bubble svg {
   display: block;
-  width: 31px;
-  height: 31px;
+  width: 29px;
+  height: 29px;
 }
 
-.av-ceo        { left: 43%; top: 24%; --ring: #F0B877; }
-.av-lamang     { left: 47%; top: 40%; --ring: #EFDCC0; }
-.av-kkomaengi  { left: 63%; top: 33.5%; --ring: #E3BD8B; }
-.av-imseogeun  { left: 76%; top: 45%; --ring: #9BCFE6; }
-.av-haseon     { left: 87%; top: 58%; --ring: #F3C3CC; }
+/* 배경 이미지의 의자 좌석 위에 앉은 위치 */
+.av-ceo        { left: 44%;   top: 25%;   --ring: #F0B877; }
+.av-lamang     { left: 47.5%; top: 41%;   --ring: #EFDCC0; }
+.av-kkomaengi  { left: 63%;   top: 34.5%; --ring: #E3BD8B; }
+.av-imseogeun  { left: 76%;   top: 46%;   --ring: #9BCFE6; }
+.av-haseon     { left: 86.5%; top: 60%;   --ring: #F3C3CC; }
 
 .clay-tag {
   max-width: 76px;
@@ -2183,44 +2185,40 @@ body.is-locked { overflow: hidden; }
   color: #A24E2C;
 }
 
-/* 움직임 ON — 다섯 캐릭터가 서로 다른 박자로 둥실둥실 */
+/* 움직임 ON — 의자에 앉은 채 고개만 살짝 까닥 (위아래로 뜨지 않음) */
 .clay-map.is-lively .clay-avatar { animation-duration: var(--dur, 4s); animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
-.clay-map.is-lively .av-ceo       { animation-name: clayFloat;  --dur: 3.7s; animation-delay: .1s; }
-.clay-map.is-lively .av-lamang    { animation-name: clayHop;    --dur: 4.6s; animation-delay: .9s; }
-.clay-map.is-lively .av-kkomaengi { animation-name: clayWiggle; --dur: 3.3s; animation-delay: .4s; }
-.clay-map.is-lively .av-imseogeun { animation-name: clayGlide;  --dur: 5.2s; animation-delay: 1.6s; }
-.clay-map.is-lively .av-haseon    { animation-name: clayBounce; --dur: 4.1s; animation-delay: 2.3s; }
+.clay-map.is-lively .av-ceo       { animation-name: clayNod;     --dur: 4.2s; animation-delay: .1s; }
+.clay-map.is-lively .av-lamang    { animation-name: clayTilt;    --dur: 3.6s; animation-delay: .9s; }
+.clay-map.is-lively .av-kkomaengi { animation-name: claySway;    --dur: 4.8s; animation-delay: .4s; }
+.clay-map.is-lively .av-imseogeun { animation-name: clayPeek;    --dur: 3.9s; animation-delay: 1.6s; }
+.clay-map.is-lively .av-haseon    { animation-name: clayBreathe; --dur: 5.4s; animation-delay: 2.3s; }
 
-@keyframes clayFloat {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50%      { transform: translate(-50%, calc(-50% - 6px)); }
-}
-@keyframes clayHop {
-  0%, 62%, 100% { transform: translate(-50%, -50%) scale(1, 1); }
-  14%           { transform: translate(-50%, calc(-50% - 1px)) scale(1.02, .98); }
-  26%           { transform: translate(-50%, calc(-50% - 8px)) scale(.99, 1.01); }
-  38%           { transform: translate(-50%, calc(-50% - 1px)) scale(1.03, .97); }
-  48%           { transform: translate(-50%, calc(-50% - 5px)) scale(1, 1); }
-  56%           { transform: translate(-50%, -50%) scale(1.02, .98); }
-}
-@keyframes clayWiggle {
+@keyframes clayNod {
   0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  28%      { transform: translate(calc(-50% + 2px), calc(-50% - 2px)) rotate(3deg); }
-  55%      { transform: translate(calc(-50% - 2px), calc(-50% - 4px)) rotate(-2.5deg); }
-  78%      { transform: translate(calc(-50% + 1px), calc(-50% - 1px)) rotate(1.5deg); }
+  22%      { transform: translate(-50%, -50%) rotate(-2.6deg); }
+  48%      { transform: translate(-50%, -50%) rotate(1.8deg); }
+  72%      { transform: translate(-50%, -50%) rotate(-1.2deg); }
 }
-@keyframes clayGlide {
+@keyframes clayTilt {
   0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  24%      { transform: translate(calc(-50% + 5px), calc(-50% - 3px)) rotate(-2deg); }
-  52%      { transform: translate(calc(-50% + 2px), calc(-50% - 7px)) rotate(0deg); }
-  76%      { transform: translate(calc(-50% - 5px), calc(-50% - 4px)) rotate(2deg); }
+  30%      { transform: translate(-50%, -50%) rotate(2.8deg); }
+  64%      { transform: translate(-50%, -50%) rotate(-2.2deg); }
 }
-@keyframes clayBounce {
-  0%, 100% { transform: translate(-50%, -50%) scale(1, 1); }
-  30%      { transform: translate(-50%, calc(-50% - 7px)) scale(1.03, .97); }
-  46%      { transform: translate(-50%, -50%) scale(.98, 1.02); }
-  60%      { transform: translate(-50%, calc(-50% - 3px)) scale(1.01, .99); }
-  74%      { transform: translate(-50%, -50%) scale(1, 1); }
+@keyframes claySway {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  26%      { transform: translate(-50%, -50%) rotate(-2.4deg); }
+  58%      { transform: translate(-50%, -50%) rotate(2.6deg); }
+  82%      { transform: translate(-50%, -50%) rotate(-1.2deg); }
+}
+@keyframes clayPeek {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  34%      { transform: translate(-50%, -50%) rotate(2.2deg); }
+  68%      { transform: translate(-50%, -50%) rotate(-3deg); }
+}
+@keyframes clayBreathe {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+  44%      { transform: translate(-50%, -50%) rotate(1.4deg) scale(1.03); }
+  74%      { transform: translate(-50%, -50%) rotate(-1deg) scale(1.01); }
 }
 
 /* 지금 본부에서는 — 방별 최신 한 줄 */
