@@ -784,6 +784,20 @@
     { name: '하선 사원', mention: '@하선사원 ' }
   ];
 
+  /* 책상 위 캐릭터 — 소금빵 · 마들렌 · 돌고래 · 토끼 (index.html 의 symbol 을 그대로 쓴다) */
+  const CHAR_HEAD = {
+    '라망이 팀장': 'head-lamang',
+    '꼬맹이 대리': 'head-kkomaengi',
+    '임석은 사원': 'head-imseogeun',
+    '하선 사원': 'head-haseon'
+  };
+  const CHAR_KIND = {
+    '라망이 팀장': '🍞 소금빵',
+    '꼬맹이 대리': '🐚 마들렌',
+    '임석은 사원': '🐬 돌고래',
+    '하선 사원': '🐰 토끼'
+  };
+
   const LOAD_LABEL = { ok: '여유', warn: '보통', busy: '많음' };
   const MOTION_KEY = 'heung-office-motion';
 
@@ -904,14 +918,20 @@
       lastHtml = body + '<em>' + r.icon + ' ' + esc(r.name) + ' · ' + esc(when) + '</em>';
     }
 
+    const headId = CHAR_HEAD[pname];
+    const avatarInner = headId
+      ? '<svg class="dd-char" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><use href="#' + headId + '"></use></svg>'
+      : esc(p.emoji);
+    const kind = CHAR_KIND[pname] ? ' · ' + CHAR_KIND[pname] : '';
+
     box.hidden = false;
     box.innerHTML = '' +
       '<div class="dd-head">' +
-        '<span class="dd-avatar" aria-hidden="true">' + esc(p.emoji) +
+        '<span class="dd-avatar" aria-hidden="true">' + avatarInner +
           '<i class="dd-dot' + (on ? '' : ' is-idle') + '"></i></span>' +
         '<div class="dd-id">' +
           '<h3 class="dd-name">' + esc(pname) + '</h3>' +
-          '<p class="dd-role">' + esc(p.role || '비서') + ' · ' + (on ? '지금 활동 중' : '대기 중') + '</p>' +
+          '<p class="dd-role">' + esc(p.role || '비서') + esc(kind) + ' · ' + (on ? '지금 활동 중' : '대기 중') + '</p>' +
         '</div>' +
         '<button type="button" class="dd-close" data-dd-close aria-label="상세 닫기">✕</button>' +
       '</div>' +
