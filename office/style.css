@@ -410,9 +410,9 @@ a { color: inherit; text-decoration: none; }
   margin-top: 6px;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #4A382A;
-  background: #33261A;
-  box-shadow: 0 4px 12px -10px rgba(0, 0, 0, .8);
+  border: 1.5px solid #DDC6A2;
+  background: #FFFCF5;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .8) inset;
 }
 
 .code-head {
@@ -420,16 +420,16 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 5px 7px 5px 10px;
-  background: #3E2E20;
-  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  padding: 4px 5px 4px 10px;
+  background: #F6EBD7;
+  border-bottom: 1px solid #E8D7B8;
 }
 
 .code-label {
   font-size: 9.5px;
   font-weight: 800;
   letter-spacing: -.01em;
-  color: #D9C3A2;
+  color: #8A6B44;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -437,22 +437,23 @@ a { color: inherit; text-decoration: none; }
 
 .code-copy {
   flex: none;
-  padding: 4px 9px;
+  padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, .18);
-  background: rgba(255, 249, 240, .12);
-  color: #FFF6E8;
-  font-size: 10px;
+  border: 1px solid #D5B98D;
+  background: #FFFDF8;
+  color: #6B4A22;
+  font-size: 10.5px;
   font-weight: 800;
   letter-spacing: -.01em;
   white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset;
   transition: background .15s, color .15s, border-color .15s, transform .12s;
 }
-.code-copy:active { transform: scale(.96); }
+.code-copy:active { transform: scale(.96); background: #F5E8D2; }
 .code-copy.is-done {
-  background: rgba(122, 200, 142, .28);
-  border-color: rgba(150, 222, 170, .45);
-  color: #E2F8E6;
+  background: #E9F3E8;
+  border-color: #A9CDAD;
+  color: #2E6B3E;
 }
 
 .code-body {
@@ -462,9 +463,9 @@ a { color: inherit; text-decoration: none; }
   overflow: auto;
   overscroll-behavior: contain;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "D2Coding", "Courier New", monospace;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #F3E6D4;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: #3B2E23;
   white-space: pre-wrap;
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -478,7 +479,21 @@ a { color: inherit; text-decoration: none; }
   white-space: inherit;
 }
 
-.msg.is-own .msg-code-block { margin-left: auto; }
+.msg.is-own .msg-code-block {
+  margin-left: auto;
+  border-color: #E6C3AB;
+  background: #FFFBF6;
+}
+.msg.is-own .code-head {
+  background: #FBEDE2;
+  border-bottom-color: #EFD6C4;
+}
+.msg.is-own .code-label { color: #95674A; }
+.msg.is-own .code-copy {
+  border-color: #DDB79C;
+  color: #7A4426;
+}
+.msg.is-own .code-copy:active { background: #F8E3D5; }
 
 /* 지휘실 말풍선 아래 작업 상태 */
 .msg-task {
