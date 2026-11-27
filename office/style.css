@@ -2092,7 +2092,7 @@ body.is-locked { overflow: hidden; }
 .zone-hall .clay-zone-label { left: 5px; top: 5px; }
 
 .zone-command { left: 34%; top: 13%; width: 50%; height: 46%; }
-.zone-command .clay-zone-label { right: 5px; top: 5px; }
+.zone-command .clay-zone-label { left: 4px; top: 26%; }
 
 .zone-lounge { left: 45%; top: 56%; width: 52%; height: 33%; }
 .zone-lounge .clay-zone-label { left: 5px; bottom: 5px; }
@@ -2135,15 +2135,15 @@ body.is-locked { overflow: hidden; }
   transition: transform .16s, filter .16s;
 }
 
-.av-ceo        { left: 43.5%; top: 29.5%; --ring: #F0B877; }
+.av-ceo        { left: 43%;   top: 24.2%; --ring: #F0B877; }
 .av-ceo .clay-figure        { --fh: 40px; }
-.av-lamang     { left: 51%;   top: 47.5%; --ring: #EFDCC0; }
+.av-lamang     { left: 47.5%; top: 46.5%; --ring: #EFDCC0; }
 .av-lamang .clay-figure     { --fh: 34px; }
-.av-kkomaengi  { left: 67.5%; top: 41%;   --ring: #E3BD8B; }
+.av-kkomaengi  { left: 65.2%; top: 40.5%; --ring: #E3BD8B; }
 .av-kkomaengi .clay-figure  { --fh: 36px; }
-.av-imseogeun  { left: 79.5%; top: 52.5%; --ring: #9BCFE6; }
+.av-imseogeun  { left: 76.8%; top: 51%;   --ring: #9BCFE6; }
 .av-imseogeun .clay-figure  { --fh: 34px; }
-.av-haseon     { left: 85%;   top: 65.5%; --ring: #F3C3CC; }
+.av-haseon     { left: 83%;   top: 66.5%; --ring: #F3C3CC; }
 .av-haseon .clay-figure     { --fh: 40px; }
 
 .clay-tag {
