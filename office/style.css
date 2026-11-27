@@ -1419,10 +1419,10 @@ body.is-locked { overflow: hidden; }
 /* 대회의실 — 긴 회의 테이블 + 의자 */
 .hall-table {
   position: absolute;
-  left: 27%;
-  right: 27%;
-  top: 11%;
-  bottom: 11%;
+  left: 30%;
+  right: 30%;
+  top: 13%;
+  bottom: 13%;
   border-radius: 999px;
   background: linear-gradient(90deg, #AE7641 0%, #8B5526 55%, #7C4A1F 100%);
   border: 1px solid #6C3F17;
@@ -1445,19 +1445,19 @@ body.is-locked { overflow: hidden; }
 
 .hall-chairs {
   position: absolute;
-  width: 10px;
-  top: 9%;
-  bottom: 9%;
+  width: 8.5%;
+  top: 11%;
+  bottom: 11%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   z-index: 1;
 }
-.hall-chairs.is-left { left: 6%; }
-.hall-chairs.is-right { right: 6%; }
+.hall-chairs.is-left { left: 15%; }
+.hall-chairs.is-right { right: 15%; }
 .hall-chairs i {
   display: block;
-  height: 8px;
+  height: 9px;
   border-radius: 3px;
   background: linear-gradient(180deg, #DCC9A9, #C3AB86);
   border: 1px solid #BCA37E;
@@ -1481,8 +1481,8 @@ body.is-locked { overflow: hidden; }
   position: absolute;
   left: 50%;
   bottom: 8px;
-  width: 52%;
-  height: 21px;
+  width: 46%;
+  height: 24px;
   transform: translateX(-50%);
   border-radius: 6px;
   background: linear-gradient(180deg, #AB7341, #844F1F);
@@ -1494,9 +1494,9 @@ body.is-locked { overflow: hidden; }
 .cmd-screen {
   position: absolute;
   left: 50%;
-  top: -10px;
-  width: 46%;
-  height: 12px;
+  top: -11px;
+  width: 42%;
+  height: 13px;
   transform: translateX(-50%);
   border-radius: 3px;
   background: linear-gradient(180deg, #CFE2E0, #A9C4C6);
@@ -1506,7 +1506,7 @@ body.is-locked { overflow: hidden; }
 .cmd-avatar {
   position: absolute;
   left: 50%;
-  bottom: 26px;
+  bottom: 28px;
   width: 20px;
   height: 20px;
   transform: translateX(-50%);
@@ -1680,43 +1680,60 @@ body.is-locked { overflow: hidden; }
 
 .sofa {
   position: absolute;
-  background: linear-gradient(180deg, #E0A582, #CE8760);
-  border: 1px solid #BC7550;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .28);
+  background: linear-gradient(180deg, #E4AB88, #CD845D);
+  border: 1px solid #B96F4B;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .3), 0 3px 7px -6px rgba(120, 60, 30, .9);
   z-index: 2;
+}
+.sofa::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 34%;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, .2);
+  pointer-events: none;
 }
 .sofa.is-v {
   left: 15%;
   bottom: 7px;
-  width: 14px;
-  height: 30px;
-  border-radius: 7px 7px 4px 4px;
+  width: 15px;
+  height: 32px;
+  border-radius: 8px 8px 5px 5px;
 }
 .sofa.is-h {
   left: 21%;
   bottom: 7px;
-  width: 33%;
-  height: 14px;
-  border-radius: 4px 7px 7px 4px;
+  width: 34%;
+  height: 16px;
+  border-radius: 5px 8px 8px 5px;
+}
+.sofa.is-h::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 5px; bottom: 4px;
+  width: 1px;
+  background: rgba(140, 70, 40, .28);
 }
 
 .lounge-table {
   position: absolute;
   left: 57%;
-  bottom: 9px;
-  width: 18px;
-  height: 18px;
+  bottom: 8px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #FBF0DE, #EEDCC0);
-  border: 1px solid #E0C8A4;
-  box-shadow: inset 0 1px 0 #fff;
+  background: linear-gradient(180deg, #FCF2E2, #EBD7B8);
+  border: 1px solid #DFC6A1;
+  box-shadow: inset 0 1px 0 #fff, 0 3px 7px -6px rgba(120, 60, 30, .9);
   z-index: 3;
 }
 
 .lounge-cup {
   position: absolute;
-  left: 55%;
-  bottom: 21px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -52%);
   font-size: 9px;
   line-height: 1;
   z-index: 4;
@@ -1756,8 +1773,8 @@ body.is-locked { overflow: hidden; }
   50%      { transform: rotate(2.5deg); }
 }
 @keyframes mapSteam {
-  0%, 100% { opacity: .55; transform: translateY(0); }
-  50%      { opacity: .95; transform: translateY(-1.5px); }
+  0%, 100% { opacity: .55; transform: translate(-50%, -52%); }
+  50%      { opacity: .95; transform: translate(-50%, -58%); }
 }
 
 /* 비서 상세 카드 */
