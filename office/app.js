@@ -1021,7 +1021,9 @@
     let lastHtml = '<span class="dd-none">아직 남긴 말이 없어요.</span>';
     if (last) {
       const r = ROOMS[last.channel] || ROOMS.main;
-      const raw = String(last.text == null ? '' : last.text).trim();
+      /* 코드 블록이면 ``` 펜스만 걷어내고 내용을 보여준다 */
+      const raw = String(last.text == null ? '' : last.text)
+        .replace(/```[a-z]*\s*/gi, ' ').replace(/\s+/g, ' ').trim();
       const body = raw
         ? esc(raw.length > 90 ? raw.slice(0, 90) + '…' : raw)
         : '📷 사진을 남겼어요';
