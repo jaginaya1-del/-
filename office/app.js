@@ -184,6 +184,116 @@
     return youtubeIds(text).map(ytEmbedCard).join('');
   }
 
+  /* ---------------- 마크다운 코드 블록 (``` … ```) ---------------- */
+
+  /* 본문을 일반 글과 코드 블록으로 나눈다 — 닫히지 않은 펜스는 끝까지 코드로 */
+  function splitCode(text) {
+    const src = String(text == null ? '' : text);
+    const out = [];
+    let i = 0;
+
+    while (i < src.length) {
+      const start = src.indexOf('```', i);
+      if (start === -1) {
+        out.push({ type: 'text', text: src.slice(i) });
+        break;
+      }
+      if (start > i) out.push({ type: 'text', text: src.slice(i, start) });
+
+      const rest = src.slice(start + 3);
+      const end = rest.indexOf('```');
+      let body = end === -1 ? rest : rest.slice(0, end);
+      let lang = '';
+
+      /* 첫 줄이 언어 이름(js, bash 등)이면 라벨로 빼고 본문에서 지운다 */
+      const nl = body.indexOf('\n');
+      const first = (nl === -1 ? body : body.slice(0, nl)).trim();
+      if (first && first.length <= 12 && /^[a-z0-9+#._-]+$/i.test(first)) {
+        lang = first;
+        body = nl === -1 ? '' : body.slice(nl + 1);
+      }
+
+      body = body.replace(/^\n+/, '').replace(/\s+$/, '');
+      out.push({ type: 'code', lang: lang, code: body });
+      if (end === -1) break;
+      i = start + 3 + end + 3;
+    }
+    return out;
+  }
+
+  function codeBlockHtml(part) {
+    if (!part.code) return '';
+    return '<div class="msg-code-block">' +
+      '<div class="code-head">' +
+        '<span class="code-label">코드 블록' + (part.lang ? ' · ' + esc(part.lang) : '') + '</span>' +
+        '<button type="button" class="code-copy" data-copy aria-label="코드 블록 복사">📋 복사</button>' +
+      '</div>' +
+      '<pre class="code-body"><code>' + esc(part.code) + '</code></pre>' +
+    '</div>';
+  }
+
+  /* 말풍선 본문 — 코드 블록이 없으면 기존 그대로 한 덩어리 */
+  function bubbleBodyHtml(text) {
+    const src = String(text == null ? '' : text);
+    if (src.indexOf('```') === -1) return '<p class="bubble">' + linkify(src) + '</p>';
+
+    return splitCode(src).map(function (part) {
+      if (part.type === 'code') return codeBlockHtml(part);
+      const plain = part.text.replace(/^\n+/, '').replace(/\s+$/, '');
+      return plain ? '<p class="bubble">' + linkify(plain) + '</p>' : '';
+    }).join('');
+  }
+
+  /* 코드 블록 제거 — 유튜브·사진 링크가 코드 안에서 잘못 잡히지 않게 */
+  function withoutCode(text) {
+    return String(text == null ? '' : text).replace(/```[\s\S]*?```/g, ' ');
+  }
+
+  async function copyText(text) {
+    if (!text) return false;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (err) { /* 인앱 브라우저·권한 거부 → 아래 방식 */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return !!ok;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function copyCode(btn) {
+    const block = btn.closest('.msg-code-block');
+    const codeEl = block ? block.querySelector('code') : null;
+    const text = codeEl ? codeEl.textContent : '';
+    const ok = await copyText(text);
+
+    if (!ok) {
+      toast('복사하지 못했어요 — 코드를 길게 눌러 복사해 주세요');
+      return;
+    }
+
+    btn.textContent = '✅ 복사됨';
+    btn.classList.add('is-done');
+    clearTimeout(btn._t);
+    btn._t = setTimeout(function () {
+      btn.textContent = '📋 복사';
+      btn.classList.remove('is-done');
+    }, 1500);
+  }
+
   /* ---------------- 사진 ---------------- */
 
   const MAX_PHOTOS = 10;
@@ -463,6 +573,7 @@
       prev = { name: name, ts: m.ts || 0 };
       const time = m.timeStr || (m.ts ? fmtTime(new Date(m.ts)) : '');
       const text = String(m.text == null ? '' : m.text);
+      const hasCode = text.indexOf('```') !== -1;
       const pics = bubbleImgs(messageImages(m));
       const tStatus = msgTaskStatus(m, state.channel);
       const taskRow = tStatus ? msgTaskRow(m, tStatus) : '';
@@ -472,14 +583,14 @@
           (grouped
             ? '<span class="msg-avatar" aria-hidden="true" style="background:transparent;border-color:transparent;box-shadow:none"></span>'
             : '<span class="msg-avatar" aria-hidden="true">' + esc(who.emoji) + '</span>') +
-          '<div class="msg-body">' +
+          '<div class="msg-body' + (hasCode ? ' has-code' : '') + '">' +
             (grouped ? '' :
               '<div class="msg-meta"><span class="msg-name">' + esc(name) + '</span>' +
               (roleLabel ? '<span class="msg-role">' + esc(roleLabel) + '</span>' : '') +
               '<span>' + esc(time) + '</span></div>') +
-            (text.trim() ? '<p class="bubble">' + linkify(text) + '</p>' : '') +
+            (text.trim() ? bubbleBodyHtml(text) : '') +
             pics +
-            ytEmbeds(text) +
+            ytEmbeds(withoutCode(text)) +
             taskRow +
           '</div>' +
         '</article>';
@@ -1129,6 +1240,8 @@
 
   /* 사진 크게 보기 + 지휘실 상태 변경 */
   $('msgList').addEventListener('click', async (e) => {
+    const cbtn = e.target.closest('.code-copy');
+    if (cbtn) { await copyCode(cbtn); return; }
     const sbtn = e.target.closest('.msg-task-actions .state-btn');
     if (sbtn) { await setMessageTask(sbtn); return; }
     const btn = e.target.closest('.bubble-img');
